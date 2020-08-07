@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "project_inception",
+  "version": "${version}",
+
+  "name": "Project Inception",
+  "description": "A dream within a dream...",
+  "authors": [
+    "Arc'blroth"
+  ],
+
+  "license": "GPL-3.0",
+  "icon": "assets/project_inception/icon.png",
+
+  "environment": "client",
+  "entrypoints": {
+    "mm:early_risers": [
+      "ai.arcblroth.projectInception.ProjectInceptionEarlyRiser"
+    ],
+	"main": [
+      "ai.arcblroth.projectInception.ProjectInception"
+	]
+  },
+
+  "mixins": [
+    "project_inception.mixins.json"
+  ],
+
+  "accessWidener": "project_inception.aw",
+
+  "depends": {
+    "fabricloader": ">=0.7.8",
+    "fabric": "*",
+    "minecraft": "1.16.x"
+  }
+
+}

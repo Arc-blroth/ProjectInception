@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "ai.arcblroth.projectInception.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "MixinRenderSystem"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
