@@ -4,7 +4,8 @@
   "package": "ai.arcblroth.projectInception.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "MixinRenderSystem"
+    "MixinRenderSystem",
+    "MixinWindow"
   ],
   "injectors": {
     "defaultRequire": 1

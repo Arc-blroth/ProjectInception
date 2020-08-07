@@ -28,6 +28,8 @@ dependencies {
 
 	modCompile "com.github.Chocohead:Fabric-ASM:2.1"
 	include "com.github.Chocohead:Fabric-ASM:2.1"
+
+	implementation 'net.openhft:chronicle-queue:5.19.76'
 }
 
 processResources {
