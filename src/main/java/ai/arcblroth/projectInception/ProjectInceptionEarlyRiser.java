@@ -2,6 +2,8 @@ package ai.arcblroth.projectInception;
 
 import com.chocohead.mm.api.ClassTinkerers;
 import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
@@ -11,14 +13,19 @@ import java.util.function.Predicate;
 
 public class ProjectInceptionEarlyRiser implements Runnable {
 
+    public static final Logger LOGGER = LogManager.getLogger("ProjectInception");
+    public static final boolean IS_INNER = System.getProperty("projectInceptionInner") != null
+            && System.getProperty("projectInceptionInner").equals("true");
+    public static String[] ARGUMENTS = new String[0];
+
     @Override
     public void run() {
-        if(ProjectInception.IS_INNER) {
-            ProjectInception.LOGGER.log(Level.INFO, "Initializing for inner instance...");
+        if(IS_INNER) {
+            LOGGER.log(Level.INFO, "Initializing for inner instance...");
         } else {
-            ProjectInception.LOGGER.log(Level.INFO, "Initializing for parent instance...");
+            LOGGER.log(Level.INFO, "Initializing for parent instance...");
         }
-        if(ProjectInception.IS_INNER) {
+        if(IS_INNER) {
             // Force the window to not appear
             ClassTinkerers.addTransformation("net/minecraft/client/util/Window", classNode -> {
                 classNode.methods.stream().filter(method -> method.name.equals("<init>")).forEach(method -> {

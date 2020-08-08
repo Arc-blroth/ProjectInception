@@ -19,7 +19,10 @@
     ],
 	"main": [
       "ai.arcblroth.projectInception.ProjectInception"
-	]
+	],
+    "client": [
+      "ai.arcblroth.projectInception.ProjectInceptionClient"
+    ]
   },
 
   "mixins": [

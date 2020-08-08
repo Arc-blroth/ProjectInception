@@ -12,9 +12,9 @@ public class MixinWindow {
 
     @Inject(method = "close", at = @At("RETURN"))
     private void closeChronicleQueue(CallbackInfo ci) {
-        if(ProjectInception.queue != null
-        && !ProjectInception.queue.isClosed()) {
-            ProjectInception.queue.close();
+        if(ProjectInception.outputQueue != null
+        && !ProjectInception.outputQueue.isClosed()) {
+            ProjectInception.outputQueue.close();
         }
     }
 

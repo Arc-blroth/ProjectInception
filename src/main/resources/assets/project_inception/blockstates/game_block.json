@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "project_inception:block/game_block" },
+    "facing=east":  { "model": "project_inception:block/game_block", "y":  90},
+    "facing=south": { "model": "project_inception:block/game_block", "y": 180 },
+    "facing=west":  { "model": "project_inception:block/game_block", "y": 270 }
+  }
+}
