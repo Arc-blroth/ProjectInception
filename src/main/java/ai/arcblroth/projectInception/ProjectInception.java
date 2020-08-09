@@ -2,9 +2,11 @@ package ai.arcblroth.projectInception;
 
 import ai.arcblroth.projectInception.block.GameBlock;
 import ai.arcblroth.projectInception.block.GameBlockEntity;
+import ai.arcblroth.projectInception.block.InceptionBlock;
 import ai.arcblroth.projectInception.item.BlockItemWithGlint;
 import net.fabricmc.api.ModInitializer;
 import net.minecraft.block.AbstractBlock;
+import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.Material;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
@@ -32,6 +34,7 @@ public class ProjectInception implements ModInitializer {
 	public static GameBlock GAME_BLOCK;
 	public static BlockItem GAME_BLOCK_ITEM;
 	public static BlockEntityType<GameBlockEntity> GAME_BLOCK_ENTITY_TYPE;
+	public static HorizontalFacingBlock INCEPTION_BLOCK;
 
     @Override
 	public void onInitialize() {
@@ -42,6 +45,8 @@ public class ProjectInception implements ModInitializer {
 				BlockEntityType.Builder.create(GameBlockEntity::new, GAME_BLOCK).build(null));
 		GAME_BLOCK_ITEM = Registry.register(Registry.ITEM, new Identifier(MODID, "game_block"),
 				new BlockItemWithGlint(GAME_BLOCK, new Item.Settings().group(ItemGroup.DECORATIONS).rarity(Rarity.UNCOMMON)));
+		INCEPTION_BLOCK = Registry.register(Registry.BLOCK, new Identifier(MODID, "inception_block"),
+				new InceptionBlock(AbstractBlock.Settings.of(Material.METAL).strength(2).emissiveLighting((s, v, w) -> true)));
 	}
 
 }

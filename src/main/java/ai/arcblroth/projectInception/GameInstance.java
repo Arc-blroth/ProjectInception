@@ -1,6 +1,8 @@
 package ai.arcblroth.projectInception;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.util.Util;
 import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.TailerDirection;
@@ -23,6 +25,8 @@ public class GameInstance {
     private static final ArrayList<GameInstance> instancesToCleanUp = new ArrayList<>();
     private int instanceNumber;
     private Process process;
+    private final Object processLock = new Object();
+    private boolean isProcessBeingKilled = false;
     private final ArrayList<String> commandLine;
     private final ExcerptTailer tailer;
     private int lastWidth = 0;
@@ -32,17 +36,7 @@ public class GameInstance {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             instancesToCleanUp.forEach(g -> {
                 ProjectInception.LOGGER.log(Level.INFO, "Destroying game instances on exit...");
-                if(g.process != null && g.process.isAlive()) {
-                    g.process.destroy();
-                    if(g.process.isAlive()) {
-                        try {
-                            Thread.sleep(5000);
-                        } catch (InterruptedException ignored) {}
-                        if (g.process.isAlive()) {
-                            g.process.destroyForcibly();
-                        }
-                    }
-                }
+                g.stop(false);
             });
         }));
     }
@@ -97,31 +91,63 @@ public class GameInstance {
         }
     }
 
-    public ByteBuffer getLastTexture(ByteBuffer in) {
-        if(!process.isAlive()) return null;
-        this.tailer.toEnd();
-        if(this.tailer.index() == 0) return in;
-        this.tailer.moveToIndex(this.tailer.index() - 1);
-        try (DocumentContext dc = this.tailer.readingDocument()) {
-            if (dc.isPresent()) {
-                Bytes<?> bytes = dc.wire().bytes();
-                lastWidth = bytes.readInt();
-                lastHeight = bytes.readInt();
-                if (in != null) {
-                    in.rewind();
+    public void stop(boolean async) {
+        Runnable stopFunc = () -> {
+            if(this.process != null && this.process.isAlive()) {
+                synchronized (processLock) {
+                    isProcessBeingKilled = true;
                 }
-                if (in == null || in.capacity() < lastWidth * lastHeight * 4) {
-                    in = BufferUtils.createByteBuffer(lastWidth * lastHeight * 4);
+                ProjectInception.LOGGER.log(Level.DEBUG, "Destroying game instance #" + this.instanceNumber);
+                this.process.destroy();
+                if(this.process.isAlive()) {
+                    try {
+                        Thread.sleep(5000);
+                    } catch (InterruptedException ignored) {}
+                    if (this.process.isAlive()) {
+                        this.process.destroyForcibly();
+                    }
                 }
-                bytes.read(in);
-                in.rewind();
-                for (int i = 0; i < in.capacity(); i += 4) {
-                    // on the sending side alpha is zero, so
-                    // we make sure it gets set to 100% here
-                    in.put(i + 3, (byte)255);
+                this.process = null;
+                synchronized (processLock) {
+                    isProcessBeingKilled = false;
                 }
             }
-            return in;
+        };
+        if(async) {
+            new Thread(stopFunc).start();
+        } else {
+            stopFunc.run();
+        }
+    }
+
+    public ByteBuffer getLastTexture(ByteBuffer in) {
+        synchronized (processLock) {
+            if(isProcessBeingKilled) return null;
+            if (process == null || !process.isAlive()) return null;
+            this.tailer.toEnd();
+            if (this.tailer.index() == 0) return in;
+            this.tailer.moveToIndex(this.tailer.index() - 1);
+            try (DocumentContext dc = this.tailer.readingDocument()) {
+                if (dc.isPresent()) {
+                    Bytes<?> bytes = dc.wire().bytes();
+                    lastWidth = bytes.readInt();
+                    lastHeight = bytes.readInt();
+                    if (in != null) {
+                        in.rewind();
+                    }
+                    if (in == null || in.capacity() < lastWidth * lastHeight * 4) {
+                        in = BufferUtils.createByteBuffer(lastWidth * lastHeight * 4);
+                    }
+                    bytes.read(in);
+                    in.rewind();
+                    for (int i = 0; i < in.capacity(); i += 4) {
+                        // on the sending side alpha is zero, so
+                        // we make sure it gets set to 100% here
+                        in.put(i + 3, (byte) 255);
+                    }
+                }
+                return in;
+            }
         }
     }
 
@@ -131,6 +157,10 @@ public class GameInstance {
 
     public int getLastHeight() {
         return lastHeight;
+    }
+
+    public boolean isAlive() {
+        return process != null && process.isAlive();
     }
 
 }

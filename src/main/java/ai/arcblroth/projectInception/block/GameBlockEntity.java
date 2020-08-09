@@ -2,26 +2,131 @@ package ai.arcblroth.projectInception.block;
 
 import ai.arcblroth.projectInception.GameInstance;
 import ai.arcblroth.projectInception.ProjectInception;
+import net.fabricmc.fabric.api.block.entity.BlockEntityClientSerializable;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Tickable;
+import net.minecraft.util.math.BlockPos;
 
-public class GameBlockEntity extends BlockEntity {
+public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntityClientSerializable {
 
-    private boolean isOn; // this WILL NOT persist in saving
-    private GameInstance gameInstance;
+    private BlockPos controllerBlockPos = null;
+    private float offsetX = 0;
+    private float offsetY = 0;
+    private int sizeX = 0;
+    private int sizeY = 0;
+    private boolean isController = false;
+    private boolean isOn = false;
+    private GameInstance gameInstance = null;
 
     public GameBlockEntity() {
         super(ProjectInception.GAME_BLOCK_ENTITY_TYPE);
-        this.isOn = false;
-        this.gameInstance = new GameInstance();
     }
 
-    public ActionResult turnOn() {
-        if(this.world != null && this.world.isClient && !isOn) {
+    public void turnOn(BlockPos controllerBlockPos, float offsetX, float offsetY, int sizeX, int sizeY) {
+        this.isOn = true;
+        this.controllerBlockPos = controllerBlockPos;
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+        this.sizeX = sizeX;
+        this.sizeY = sizeY;
+        this.markDirty();
+        if(!world.isClient) this.sync();
+    }
+
+    public void turnOff() {
+        if(this.world != null && this.world.isClient && this.isController && gameInstance != null) {
+            gameInstance.stop(true);
+        }
+        this.isOn = false;
+        this.markDirty();
+        if(!world.isClient) this.sync();
+    }
+
+
+    public void tick() {
+        if(isOn && !this.isController) {
+            BlockEntity blockEntity = world.getBlockEntity(controllerBlockPos);
+            if(!(blockEntity instanceof GameBlockEntity)) {
+                isOn = false;
+                controllerBlockPos = null;
+                gameInstance = null;
+                offsetX = offsetY = sizeX = sizeY = 0;
+                this.markDirty();
+                if(!world.isClient) this.sync();
+            } else if (!((GameBlockEntity) blockEntity).isOn) {
+                isOn = false;
+                controllerBlockPos = null;
+                gameInstance = null;
+                offsetX = offsetY = sizeX = sizeY = 0;
+                this.markDirty();
+                if(!world.isClient) this.sync();
+            } else if(world.isClient) {
+                this.gameInstance = ((GameBlockEntity) blockEntity).gameInstance;
+            }
+        }
+    }
+
+    public void fromTag(BlockState blockState, CompoundTag compoundTag) {
+        super.fromTag(blockState, compoundTag);
+        this.isController = compoundTag.getBoolean("isController");
+        this.isOn = compoundTag.getBoolean("isOn");
+        this.offsetX = compoundTag.getFloat("offsetX");
+        this.offsetY = compoundTag.getFloat("offsetY");
+        if(compoundTag.contains("controllerX")) {
+            controllerBlockPos = new BlockPos(compoundTag.getInt("controllerX"), compoundTag.getInt("controllerY"), compoundTag.getInt("controllerZ"));
+        } else {
+            controllerBlockPos = null;
+        }
+    }
+
+    @Override
+    public void fromClientTag(CompoundTag compoundTag) {
+        fromTag(null, compoundTag);
+    }
+
+    public CompoundTag toTag(CompoundTag tag) {
+        super.toTag(tag);
+        tag.putBoolean("isController", isController);
+        tag.putBoolean("isOn", isOn);
+        tag.putFloat("offsetX", offsetX);
+        tag.putFloat("offsetY", offsetY);
+        if(controllerBlockPos != null) {
+            tag.putInt("controllerX", controllerBlockPos.getX());
+            tag.putInt("controllerY", controllerBlockPos.getY());
+            tag.putInt("controllerZ", controllerBlockPos.getZ());
+        }
+        return tag;
+    }
+
+    @Override
+    public CompoundTag toClientTag(CompoundTag compoundTag) {
+        return toTag(compoundTag);
+    }
+
+    public BlockPos getControllerBlockPos() {
+        return controllerBlockPos;
+    }
+
+    public void setController(boolean controller) {
+        isController = controller;
+        if(this.world != null && this.world.isClient) {
+            gameInstance = new GameInstance();
             gameInstance.start();
-            this.isOn = true;
-            return ActionResult.SUCCESS;
-        } else return ActionResult.PASS;
+        }
+        this.markDirty();
+        if(!world.isClient) this.sync();
+    }
+
+    public void setControllerBlockPos(BlockPos controllerBlockPos) {
+        this.controllerBlockPos = controllerBlockPos;
+        this.markDirty();
+    }
+
+    public boolean isController() {
+        return isController;
     }
 
     public boolean isOn() {
@@ -30,6 +135,22 @@ public class GameBlockEntity extends BlockEntity {
 
     public GameInstance getGameInstance() {
         return gameInstance;
+    }
+
+    public float getOffsetX() {
+        return offsetX;
+    }
+
+    public float getOffsetY() {
+        return offsetY;
+    }
+
+    public int getSizeX() {
+        return sizeX;
+    }
+
+    public int getSizeY() {
+        return sizeY;
     }
 
 }

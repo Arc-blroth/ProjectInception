@@ -1,0 +1,12 @@
+{
+    "parent": "minecraft:block/cube",
+    "textures": {
+        "particle": "project_inception:block/inception",
+        "north": "project_inception:block/generic",
+        "south": "project_inception:block/inception",
+        "east": "project_inception:block/generic",
+        "west": "project_inception:block/generic",
+        "up": "project_inception:block/generic",
+        "down": "project_inception:block/generic"
+    }
+}

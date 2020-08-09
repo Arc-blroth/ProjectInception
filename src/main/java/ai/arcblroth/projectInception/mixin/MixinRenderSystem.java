@@ -1,15 +1,13 @@
 package ai.arcblroth.projectInception.mixin;
 
 import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Window;
-import net.minecraft.util.crash.CrashException;
-import net.minecraft.util.crash.CrashReport;
 import net.openhft.chronicle.core.UnsafeMemory;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.RollCycles;
-import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
 import org.lwjgl.BufferUtils;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,7 +16,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import static org.lwjgl.opengl.GL20.*;
@@ -32,16 +29,7 @@ public class MixinRenderSystem {
     @Inject(method = "initRenderer", at = @At("RETURN"))
     private static void initChronicleQueue(CallbackInfo ci) {
         File queueDir = new File(MinecraftClient.getInstance().runDirectory, "projectInception");
-        if(!ProjectInception.IS_INNER) {
-            if (queueDir.exists()) {
-                try {
-                    FileUtils.deleteDirectory(queueDir);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    throw new CrashException(new CrashReport("[Project Inception] Couldn't delete old queues!", e));
-                }
-            }
-        }
+        ProjectInceptionEarlyRiser.yeetChronicleQueues(queueDir, true);
         // Because we need to reuse this queue, we don't wrap this in a try
         // with resources. The queue is closed in MixinWindow#closeChronicleQueue.
         ProjectInception.LOGGER.log(Level.INFO, "Initializing queue...");

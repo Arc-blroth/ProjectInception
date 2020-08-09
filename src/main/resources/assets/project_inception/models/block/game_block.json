@@ -1,12 +1,12 @@
 {
     "parent": "minecraft:block/cube",
     "textures": {
-        "particle": "minecraft:block/crafting_table_front",
-        "north": "minecraft:block/crafting_table_front",
-        "south": "minecraft:block/crafting_table_side",
-        "east": "minecraft:block/crafting_table_side",
-        "west": "minecraft:block/crafting_table_front",
-        "up": "project_inception:block/inception",
-        "down": "minecraft:block/oak_planks"
+        "particle": "project_inception:block/inception_top",
+        "north": "project_inception:block/inception_side",
+        "south": "project_inception:block/inception_front",
+        "east": "project_inception:block/inception_side",
+        "west": "project_inception:block/inception_side",
+        "up": "project_inception:block/inception_top",
+        "down": "project_inception:block/inception_top"
     }
 }
