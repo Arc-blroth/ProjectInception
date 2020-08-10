@@ -151,6 +151,10 @@ public class GameInstance {
         }
     }
 
+    public void click(double hitX, double hitY) {
+
+    }
+
     public int getLastWidth() {
         return lastWidth;
     }

@@ -69,8 +69,8 @@ public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntit
         }
     }
 
-    public void fromTag(BlockState blockState, CompoundTag compoundTag) {
-        super.fromTag(blockState, compoundTag);
+    @Override
+    public void fromClientTag(CompoundTag compoundTag) {
         this.isController = compoundTag.getBoolean("isController");
         this.isOn = compoundTag.getBoolean("isOn");
         this.offsetX = compoundTag.getFloat("offsetX");
@@ -83,12 +83,7 @@ public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntit
     }
 
     @Override
-    public void fromClientTag(CompoundTag compoundTag) {
-        fromTag(null, compoundTag);
-    }
-
-    public CompoundTag toTag(CompoundTag tag) {
-        super.toTag(tag);
+    public CompoundTag toClientTag(CompoundTag tag) {
         tag.putBoolean("isController", isController);
         tag.putBoolean("isOn", isOn);
         tag.putFloat("offsetX", offsetX);
@@ -101,11 +96,6 @@ public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntit
         return tag;
     }
 
-    @Override
-    public CompoundTag toClientTag(CompoundTag compoundTag) {
-        return toTag(compoundTag);
-    }
-
     public BlockPos getControllerBlockPos() {
         return controllerBlockPos;
     }
@@ -114,15 +104,10 @@ public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntit
         isController = controller;
         if(this.world != null && this.world.isClient) {
             gameInstance = new GameInstance();
-            gameInstance.start();
+            //gameInstance.start();
         }
         this.markDirty();
         if(!world.isClient) this.sync();
-    }
-
-    public void setControllerBlockPos(BlockPos controllerBlockPos) {
-        this.controllerBlockPos = controllerBlockPos;
-        this.markDirty();
     }
 
     public boolean isController() {

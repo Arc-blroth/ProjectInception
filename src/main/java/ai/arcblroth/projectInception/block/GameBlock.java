@@ -1,6 +1,9 @@
 package ai.arcblroth.projectInception.block;
 
-import net.minecraft.block.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.BlockWithEntity;
+import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
@@ -13,8 +16,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.Explosion;
@@ -42,17 +44,36 @@ public class GameBlock extends BlockWithEntity {
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit) {
         BlockEntity be = world.getBlockEntity(pos);
         if(be instanceof GameBlockEntity) {
-            if (hand.equals(Hand.MAIN_HAND) && player.getStackInHand(hand).isEmpty()) {
-                if (!((GameBlockEntity) world.getBlockEntity(pos)).isOn()) {
-                    GameMultiblock multiblock = GameMultiblock.getMultiblock(world, pos);
-                    if (multiblock != null) {
-                        multiblock.forEachBlockEntity((left, y, blockEntity) -> {
-                            blockEntity.turnOn(multiblock.controllerPos, (float) left / multiblock.sizeX, (float) y / multiblock.sizeY, multiblock.sizeX, multiblock.sizeY);
-                        });
-                        BlockEntity controller = world.getBlockEntity(multiblock.controllerPos);
-                        if (controller instanceof GameBlockEntity) {
-                            ((GameBlockEntity) controller).setController(true);
+            GameBlockEntity ge = (GameBlockEntity) be;
+            if (hand.equals(Hand.MAIN_HAND)) {
+                if (!ge.isOn()) {
+                    if(player.getStackInHand(hand).isEmpty()) {
+                        GameMultiblock multiblock = GameMultiblock.getMultiblock(world, pos);
+                        if (multiblock != null) {
+                            multiblock.forEachBlockEntity((left, y, blockEntity) -> {
+                                blockEntity.turnOn(multiblock.controllerPos, (float) left / multiblock.sizeX, (float) y / multiblock.sizeY, multiblock.sizeX, multiblock.sizeY);
+                            });
+                            BlockEntity controller = world.getBlockEntity(multiblock.controllerPos);
+                            if (controller instanceof GameBlockEntity) {
+                                ((GameBlockEntity) controller).setController(true);
+                            }
+                            return ActionResult.SUCCESS;
                         }
+                    }
+                } else {
+                    Direction dir = state.get(FACING);
+                    if (hit.getSide().equals(dir.getOpposite())) {
+                        Direction left = GameMultiblock.getLeft(dir);
+                        Vec3d hitPoint = hit.getPos().subtract(pos.getX(), pos.getY(), pos.getZ());
+                        double hitX = (
+                                left.getDirection().equals(Direction.AxisDirection.POSITIVE)
+                                        ? (1 - hitPoint.getComponentAlongAxis(left.getAxis()))
+                                        : hitPoint.getComponentAlongAxis(left.getAxis())
+                        ) / ge.getSizeX();
+                        double hitY = (1 - hitPoint.getComponentAlongAxis(Direction.Axis.Y)) / ge.getSizeY();
+                        hitX += ge.getOffsetX();
+                        hitY += ge.getOffsetY();
+                        ge.getGameInstance().click(hitX, hitY);
                         return ActionResult.SUCCESS;
                     }
                 }
