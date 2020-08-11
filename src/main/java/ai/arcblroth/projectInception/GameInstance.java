@@ -17,7 +17,11 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.OptionalLong;
 import java.util.stream.Collectors;
+
+import static ai.arcblroth.projectInception.QueueProtocol.*;
+import static org.lwjgl.glfw.GLFW.*;
 
 public class GameInstance {
 
@@ -29,6 +33,7 @@ public class GameInstance {
     private boolean isProcessBeingKilled = false;
     private final ArrayList<String> commandLine;
     private final ExcerptTailer tailer;
+    private OptionalLong tailerStartIndex = OptionalLong.empty();
     private int lastWidth = 0;
     private int lastHeight = 0;
 
@@ -77,7 +82,7 @@ public class GameInstance {
             commandLine.add("--disableMultiplayer");
         }
 
-        this.tailer = ProjectInception.outputQueue.createTailer().direction(TailerDirection.NONE);
+        this.tailer = ProjectInception.outputQueue.createTailer("projectInceptionGameInstance").direction(TailerDirection.NONE);
     }
 
     public void start() {
@@ -126,10 +131,20 @@ public class GameInstance {
             if (process == null || !process.isAlive()) return null;
             this.tailer.toEnd();
             if (this.tailer.index() == 0) return in;
-            this.tailer.moveToIndex(this.tailer.index() - 1);
+            if(!tailerStartIndex.isPresent()) {
+                tailerStartIndex = OptionalLong.of(this.tailer.toStart().index());
+                this.tailer.toEnd();
+            }
+            byte tries = 0; // Prevent softlocking in case the child instance is lagging
+            while(!QueueProtocol.peekMessageType(this.tailer).equals(QueueProtocol.MessageType.IMAGE)) {
+                tries++;
+                if(this.tailer.index() - 1 == tailerStartIndex.getAsLong() || tries > 8) return in;
+                this.tailer.moveToIndex(this.tailer.index() - 1);
+            }
             try (DocumentContext dc = this.tailer.readingDocument()) {
                 if (dc.isPresent()) {
                     Bytes<?> bytes = dc.wire().bytes();
+                    if(bytes.readByte() != QueueProtocol.MessageType.IMAGE.header) throw new IllegalStateException();
                     lastWidth = bytes.readInt();
                     lastHeight = bytes.readInt();
                     if (in != null) {
@@ -152,7 +167,16 @@ public class GameInstance {
     }
 
     public void click(double hitX, double hitY) {
-
+        MouseSetPosMessage message1 = new MouseSetPosMessage();
+        message1.x = hitX;
+        message1.y = hitY;
+        writeParent2ChildMessage(message1, this.tailer.queue().acquireAppender());
+        MouseButtonMessage message2 = new MouseButtonMessage();
+        message2.button = GLFW_MOUSE_BUTTON_LEFT;
+        message2.message = GLFW_PRESS;
+        writeParent2ChildMessage(message2, this.tailer.queue().acquireAppender());
+        message2.message = GLFW_RELEASE;
+        writeParent2ChildMessage(message2, this.tailer.queue().acquireAppender());
     }
 
     public int getLastWidth() {

@@ -2,6 +2,7 @@ package ai.arcblroth.projectInception.mixin;
 
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
+import ai.arcblroth.projectInception.QueueProtocol;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Window;
@@ -28,15 +29,7 @@ public class MixinRenderSystem {
 
     @Inject(method = "initRenderer", at = @At("RETURN"))
     private static void initChronicleQueue(CallbackInfo ci) {
-        File queueDir = new File(MinecraftClient.getInstance().runDirectory, "projectInception");
-        ProjectInceptionEarlyRiser.yeetChronicleQueues(queueDir, true);
-        // Because we need to reuse this queue, we don't wrap this in a try
-        // with resources. The queue is closed in MixinWindow#closeChronicleQueue.
-        ProjectInception.LOGGER.log(Level.INFO, "Initializing queue...");
-        ProjectInception.outputQueue = ChronicleQueue
-                .singleBuilder(queueDir)
-                .rollCycle(RollCycles.HOURLY) // hopefully no one has more than 70,000 fps
-                .build();
+        ProjectInceptionEarlyRiser.initChronicleQueues(new File(MinecraftClient.getInstance().runDirectory, "projectInception"));
     }
 
     @Inject(method = "flipFrame", at = @At("RETURN"))
@@ -52,6 +45,7 @@ public class MixinRenderSystem {
             }
             glReadPixels(0, 0, fboWidth, fboHeight, GL_RGBA, GL_UNSIGNED_BYTE, projectInceptionOutput);
             ProjectInception.outputQueue.acquireAppender().writeBytes(b -> {
+                b.writeByte(QueueProtocol.MessageType.IMAGE.header);
                 b.writeInt(fboWidth);
                 b.writeInt(fboHeight);
                 UnsafeMemory.UNSAFE.copyMemory(

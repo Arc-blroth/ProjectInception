@@ -104,7 +104,7 @@ public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntit
         isController = controller;
         if(this.world != null && this.world.isClient) {
             gameInstance = new GameInstance();
-            //gameInstance.start();
+            gameInstance.start();
         }
         this.markDirty();
         if(!world.isClient) this.sync();

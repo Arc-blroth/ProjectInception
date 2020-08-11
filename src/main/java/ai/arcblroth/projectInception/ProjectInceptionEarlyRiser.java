@@ -1,8 +1,11 @@
 package ai.arcblroth.projectInception;
 
 import com.chocohead.mm.api.ClassTinkerers;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
+import net.openhft.chronicle.queue.ChronicleQueue;
+import net.openhft.chronicle.queue.RollCycles;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -22,6 +25,10 @@ public class ProjectInceptionEarlyRiser implements Runnable {
     public static final boolean IS_INNER = System.getProperty("projectInceptionInner") != null
             && System.getProperty("projectInceptionInner").equals("true");
     public static String[] ARGUMENTS = new String[0];
+
+    // This make the child process not actually init Minecraft
+    // so that I can test things without destroying my computer
+    public static final boolean USE_FAUX_INNER = false;
 
     @Override
     public void run() {
@@ -64,6 +71,17 @@ public class ProjectInceptionEarlyRiser implements Runnable {
                 return;
             }
         }
+    }
+
+    public static void initChronicleQueues(File queueDir) {
+        ProjectInceptionEarlyRiser.yeetChronicleQueues(queueDir, true);
+        // Because we need to reuse this queue, we don't wrap this in a try
+        // with resources. The queue is closed in MixinWindow#closeChronicleQueue.
+        ProjectInception.LOGGER.log(Level.INFO, "Initializing queue...");
+        ProjectInception.outputQueue = ChronicleQueue
+                .singleBuilder(queueDir)
+                .rollCycle(RollCycles.HOURLY) // hopefully no one has more than 70,000 fps
+                .build();
     }
 
     public static void yeetChronicleQueues(File queueDir, boolean allowCrash) {

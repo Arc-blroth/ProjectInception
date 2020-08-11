@@ -61,20 +61,22 @@ public class GameBlock extends BlockWithEntity {
                         }
                     }
                 } else {
-                    Direction dir = state.get(FACING);
-                    if (hit.getSide().equals(dir.getOpposite())) {
-                        Direction left = GameMultiblock.getLeft(dir);
-                        Vec3d hitPoint = hit.getPos().subtract(pos.getX(), pos.getY(), pos.getZ());
-                        double hitX = (
-                                left.getDirection().equals(Direction.AxisDirection.POSITIVE)
-                                        ? (1 - hitPoint.getComponentAlongAxis(left.getAxis()))
-                                        : hitPoint.getComponentAlongAxis(left.getAxis())
-                        ) / ge.getSizeX();
-                        double hitY = (1 - hitPoint.getComponentAlongAxis(Direction.Axis.Y)) / ge.getSizeY();
-                        hitX += ge.getOffsetX();
-                        hitY += ge.getOffsetY();
-                        ge.getGameInstance().click(hitX, hitY);
-                        return ActionResult.SUCCESS;
+                    if(world.isClient) {
+                        Direction dir = state.get(FACING);
+                        if (hit.getSide().equals(dir.getOpposite())) {
+                            Direction left = GameMultiblock.getLeft(dir);
+                            Vec3d hitPoint = hit.getPos().subtract(pos.getX(), pos.getY(), pos.getZ());
+                            double hitX = (
+                                    left.getDirection().equals(Direction.AxisDirection.POSITIVE)
+                                            ? (1 - hitPoint.getComponentAlongAxis(left.getAxis()))
+                                            : hitPoint.getComponentAlongAxis(left.getAxis())
+                            ) / ge.getSizeX();
+                            double hitY = (1 - hitPoint.getComponentAlongAxis(Direction.Axis.Y)) / ge.getSizeY();
+                            hitX += ge.getOffsetX();
+                            hitY += ge.getOffsetY();
+                            ge.getGameInstance().click(hitX, hitY);
+                            return ActionResult.SUCCESS;
+                        }
                     }
                 }
             }

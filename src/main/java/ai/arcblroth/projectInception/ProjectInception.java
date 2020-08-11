@@ -20,6 +20,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
 import java.lang.management.ManagementFactory;
+import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class ProjectInception implements ModInitializer {
 
@@ -30,6 +32,7 @@ public class ProjectInception implements ModInitializer {
 	public static final String MAIN_CLASS = "net.fabricmc.loader.launch.knot.KnotClient";
 
 	public static ChronicleQueue outputQueue;
+	public static LinkedList<QueueProtocol.Message> parent2ChildMessagesToHandle = new LinkedList<>();
 
 	public static GameBlock GAME_BLOCK;
 	public static BlockItem GAME_BLOCK_ITEM;

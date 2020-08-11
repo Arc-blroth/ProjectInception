@@ -5,6 +5,8 @@
   "compatibilityLevel": "JAVA_8",
   "client": [
     "MixinClientMain",
+    "MixinMinecraftClient",
+    "MixinMouse",
     "MixinRenderSystem",
     "MixinWindow"
   ],
