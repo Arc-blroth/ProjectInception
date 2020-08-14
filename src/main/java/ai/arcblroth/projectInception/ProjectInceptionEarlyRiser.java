@@ -80,7 +80,7 @@ public class ProjectInceptionEarlyRiser implements Runnable {
         ProjectInception.LOGGER.log(Level.INFO, "Initializing queue...");
         ProjectInception.outputQueue = ChronicleQueue
                 .singleBuilder(queueDir)
-                .rollCycle(RollCycles.HOURLY) // hopefully no one has more than 70,000 fps
+                .rollCycle(RollCycles.MINUTELY)
                 .build();
     }
 

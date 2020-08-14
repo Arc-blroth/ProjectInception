@@ -20,6 +20,11 @@ public abstract class MixinMouse implements IPreventMouseFromStackOverflow {
     @Shadow private boolean hasResolutionChanged;
     private boolean projectInceptionPreventStackOverflowPlease = false;
 
+    private final MouseButtonMessage projectInceptionMbMessage = new MouseButtonMessage();
+    private final MouseScrollMessage projectInceptionMsMessage = new MouseScrollMessage();
+    private final MouseMoveMessage projectInceptionMmMessage = new MouseMoveMessage();
+    private final MouseSetPosMessage projectInceptionMpMessage = new MouseSetPosMessage();
+
     @Inject(method = "updateMouse", at = @At("HEAD"))
     private void updateQueuedMouseEvents(CallbackInfo ci) {
         if(ProjectInception.IS_INNER) {
@@ -27,10 +32,8 @@ public abstract class MixinMouse implements IPreventMouseFromStackOverflow {
             try {
                 long windowHandle = client.getWindow().getHandle();
                 ProjectInception.parent2ChildMessagesToHandle.removeIf(message -> {
-                    System.out.println(message.getMessageType());
                     if (message instanceof MouseButtonMessage) {
                         MouseButtonMessage mbMessage = (MouseButtonMessage) message;
-                        System.out.println(mbMessage.button + " " + (mbMessage.message == 1));
                         onMouseButton(windowHandle, mbMessage.button, mbMessage.message, mbMessage.mods);
                         return true;
                     } else if (message instanceof MouseScrollMessage) {
@@ -47,7 +50,6 @@ public abstract class MixinMouse implements IPreventMouseFromStackOverflow {
                         return true;
                     } else if (message instanceof MouseSetPosMessage) {
                         MouseSetPosMessage mpMessage = (MouseSetPosMessage) message;
-                        System.out.println(mpMessage.x + " " + mpMessage.y);
                         this.hasResolutionChanged = true;
                         onCursorPos(
                                 windowHandle,
@@ -69,6 +71,46 @@ public abstract class MixinMouse implements IPreventMouseFromStackOverflow {
         if(xfceReference instanceof IPreventMouseFromStackOverflow) {
             if(!((IPreventMouseFromStackOverflow) xfceReference).getShouldPreventStackOverflow()) {
                 xfceReference.updateMouse();
+            }
+        }
+    }
+
+    @Inject(method = "onMouseButton", at = @At("HEAD"))
+    private void onParentMouseButton(long window, int button, int action, int mods, CallbackInfo ci) {
+        if(window == this.client.getWindow().getHandle()) {
+            if(ProjectInception.focusedInstance != null) {
+                projectInceptionMbMessage.button = button;
+                projectInceptionMbMessage.message = action;
+                projectInceptionMbMessage.mods = mods;
+                ProjectInception.focusedInstance.sendParent2ChildMessage(projectInceptionMbMessage);
+            }
+        }
+    }
+
+    @Inject(method = "onMouseScroll", at = @At("HEAD"))
+    private void onParentMouseScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
+        if(window == this.client.getWindow().getHandle()) {
+            if(ProjectInception.focusedInstance != null) {
+                projectInceptionMsMessage.horizontal = horizontal;
+                projectInceptionMsMessage.vertical = vertical;
+                ProjectInception.focusedInstance.sendParent2ChildMessage(projectInceptionMsMessage);
+            }
+        }
+    }
+
+    @Inject(method = "onCursorPos", at = @At("HEAD"))
+    private void onParentCursorPos(long window, double x, double y, CallbackInfo ci) {
+        if(window == this.client.getWindow().getHandle()) {
+            if(ProjectInception.focusedInstance != null) {
+                if(this.hasResolutionChanged) {
+                    projectInceptionMpMessage.x = x / this.client.getWindow().getWidth();
+                    projectInceptionMpMessage.y = y / this.client.getWindow().getHeight();
+                    ProjectInception.focusedInstance.sendParent2ChildMessage(projectInceptionMpMessage);
+                } else {
+                    projectInceptionMmMessage.x = x / this.client.getWindow().getWidth();
+                    projectInceptionMmMessage.y = y / this.client.getWindow().getHeight();
+                    ProjectInception.focusedInstance.sendParent2ChildMessage(projectInceptionMmMessage);
+                }
             }
         }
     }

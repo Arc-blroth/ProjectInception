@@ -1,3 +1,5 @@
 {
-  "block.project_inception.game_block": "Block of Minecraft"
+  "block.project_inception.inception_block": "Block of Inception",
+  "block.project_inception.game_block": "Block of Minecraft",
+  "message.project_inception.escape": "Press escape to exit."
 }

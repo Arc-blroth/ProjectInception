@@ -1,14 +1,18 @@
 package ai.arcblroth.projectInception.block;
 
+import ai.arcblroth.projectInception.client.InceptionInterfaceScreen;
+import ai.arcblroth.projectInception.item.InceptionInterfaceItem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
 import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.entity.BlockEntity;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.DirectionProperty;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.BlockMirror;
 import net.minecraft.util.BlockRotation;
@@ -61,21 +65,29 @@ public class GameBlock extends BlockWithEntity {
                         }
                     }
                 } else {
-                    if(world.isClient) {
-                        Direction dir = state.get(FACING);
-                        if (hit.getSide().equals(dir.getOpposite())) {
-                            Direction left = GameMultiblock.getLeft(dir);
-                            Vec3d hitPoint = hit.getPos().subtract(pos.getX(), pos.getY(), pos.getZ());
-                            double hitX = (
-                                    left.getDirection().equals(Direction.AxisDirection.POSITIVE)
-                                            ? (1 - hitPoint.getComponentAlongAxis(left.getAxis()))
-                                            : hitPoint.getComponentAlongAxis(left.getAxis())
-                            ) / ge.getSizeX();
-                            double hitY = (1 - hitPoint.getComponentAlongAxis(Direction.Axis.Y)) / ge.getSizeY();
-                            hitX += ge.getOffsetX();
-                            hitY += ge.getOffsetY();
-                            ge.getGameInstance().click(hitX, hitY);
-                            return ActionResult.SUCCESS;
+                    if(player.getStackInHand(hand).getItem() instanceof InceptionInterfaceItem) {
+                        if (world.isClient) {
+                            MinecraftClient.getInstance().openScreen(new InceptionInterfaceScreen(ge));
+                        }
+                        player.sendMessage(new TranslatableText("message.project_inception.escape"), true);
+                        return ActionResult.SUCCESS;
+                    } else {
+                        if (world.isClient) {
+                            Direction dir = state.get(FACING);
+                            if (hit.getSide().equals(dir.getOpposite())) {
+                                Direction left = GameMultiblock.getLeft(dir);
+                                Vec3d hitPoint = hit.getPos().subtract(pos.getX(), pos.getY(), pos.getZ());
+                                double hitX = (
+                                        left.getDirection().equals(Direction.AxisDirection.POSITIVE)
+                                                ? (1 - hitPoint.getComponentAlongAxis(left.getAxis()))
+                                                : hitPoint.getComponentAlongAxis(left.getAxis())
+                                ) / ge.getSizeX();
+                                double hitY = (1 - hitPoint.getComponentAlongAxis(Direction.Axis.Y)) / ge.getSizeY();
+                                hitX += ge.getOffsetX();
+                                hitY += ge.getOffsetY();
+                                ge.getGameInstance().click(hitX, hitY);
+                                return ActionResult.SUCCESS;
+                            }
                         }
                     }
                 }

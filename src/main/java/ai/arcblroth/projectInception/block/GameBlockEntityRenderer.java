@@ -14,6 +14,8 @@ import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.item.ItemStack;
+import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -28,8 +30,10 @@ import static org.lwjgl.system.MemoryUtil.memAddress;
 @Environment(EnvType.CLIENT)
 public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity> {
 
-    private static final SpriteIdentifier LOADING = new SpriteIdentifier(new Identifier("textures/atlas/blocks.png"), new Identifier(ProjectInception.MODID, "block/inception"));
-    private static final SpriteIdentifier GENERIC = new SpriteIdentifier(new Identifier("textures/atlas/blocks.png"), new Identifier(ProjectInception.MODID, "block/generic"));
+    private static final SpriteIdentifier LOADING = new SpriteIdentifier(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE, new Identifier(ProjectInception.MODID, "block/inception"));
+    private static final SpriteIdentifier GENERIC = new SpriteIdentifier(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE, new Identifier(ProjectInception.MODID, "block/generic"));
+    private static final Identifier POINTER = new Identifier(ProjectInception.MODID, "item/inception_interface");
+    private final Sprite pointerSprite;
     private ByteBuffer texture;
     private NativeImageBackedTexture lastTextureImage;
     private Identifier textureId;
@@ -38,6 +42,7 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
         super(dispatcher);
         this.textureId = null;
         this.texture = null;
+        this.pointerSprite = MinecraftClient.getInstance().getItemRenderer().getModels().getSprite(ProjectInception.INCEPTION_INTERFACE_ITEM);
     }
 
     @Override
@@ -152,6 +157,16 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
                     -1.01F,
                     0.0F, 1.0F,
                     0.0F, 1.0F,
+                    light);
+            VertexConsumer ptVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getText(pointerSprite.getAtlas().getId()));
+            float left = 1F - (float) blockEntity.getGameInstance().getLastMouseX();
+            float top  = 1F - (float) blockEntity.getGameInstance().getLastMouseY();
+            renderQuads(ptVertexConsumer, matrix4f,
+                    -width + 1 + left * width - 0.1875F, -width + 1 + left * width,
+                    -height + 1 + top * height - 0.25F, -height + 1 + top * height,
+                    -1.015F,
+                    pointerSprite.getMinU() + (pointerSprite.getMaxU() - pointerSprite.getMinU()) / 4, pointerSprite.getMaxU(),
+                    pointerSprite.getMaxV(), pointerSprite.getMinV(),
                     light);
         }
     }

@@ -36,6 +36,8 @@ public class GameInstance {
     private OptionalLong tailerStartIndex = OptionalLong.empty();
     private int lastWidth = 0;
     private int lastHeight = 0;
+    private double lastMouseX = 0.5;
+    private double lastMouseY = 0.5;
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -170,6 +172,8 @@ public class GameInstance {
         MouseSetPosMessage message1 = new MouseSetPosMessage();
         message1.x = hitX;
         message1.y = hitY;
+        lastMouseX = hitX;
+        lastMouseY = hitY;
         writeParent2ChildMessage(message1, this.tailer.queue().acquireAppender());
         MouseButtonMessage message2 = new MouseButtonMessage();
         message2.button = GLFW_MOUSE_BUTTON_LEFT;
@@ -177,6 +181,23 @@ public class GameInstance {
         writeParent2ChildMessage(message2, this.tailer.queue().acquireAppender());
         message2.message = GLFW_RELEASE;
         writeParent2ChildMessage(message2, this.tailer.queue().acquireAppender());
+    }
+
+    public void sendParent2ChildMessage(Message message) {
+        if(message instanceof MouseMoveMessage) {
+            MouseMoveMessage mmMessage = (MouseMoveMessage) message;
+            mmMessage.x = Math.min(Math.max(mmMessage.x, 0), 1);
+            mmMessage.y = Math.min(Math.max(mmMessage.y, 0), 1);
+            lastMouseX = mmMessage.x;
+            lastMouseY = mmMessage.y;
+        } else if(message instanceof MouseSetPosMessage) {
+            MouseSetPosMessage mpMessage = (MouseSetPosMessage) message;
+            mpMessage.x = Math.min(Math.max(mpMessage.x, 0), 1);
+            mpMessage.y = Math.min(Math.max(mpMessage.y, 0), 1);
+            lastMouseX = mpMessage.x;
+            lastMouseY = mpMessage.y;
+        }
+        writeParent2ChildMessage(message, this.tailer.queue().acquireAppender());
     }
 
     public int getLastWidth() {
@@ -189,6 +210,14 @@ public class GameInstance {
 
     public boolean isAlive() {
         return process != null && process.isAlive();
+    }
+
+    public double getLastMouseX() {
+        return lastMouseX;
+    }
+
+    public double getLastMouseY() {
+        return lastMouseY;
     }
 
 }
