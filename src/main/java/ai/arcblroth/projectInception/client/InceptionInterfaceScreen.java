@@ -23,7 +23,7 @@ public class InceptionInterfaceScreen extends Screen {
 
     @Override
     public void init() {
-        this.client.keyboard.enableRepeatEvents(true);
+        this.client.keyboard.setRepeatEvents(true);
         double x = gameInstance.getLastMouseX() * client.getWindow().getWidth();
         double y = gameInstance.getLastMouseY() * client.getWindow().getHeight();
         InputUtil.setCursorParameters(this.client.getWindow().getHandle(), GLFW_CURSOR_DISABLED, x, y);
@@ -40,7 +40,7 @@ public class InceptionInterfaceScreen extends Screen {
 
     @Override
     public void removed() {
-        this.client.keyboard.enableRepeatEvents(false);
+        this.client.keyboard.setRepeatEvents(false);
         if(ProjectInception.focusedInstance == gameInstance) {
             ProjectInception.focusedInstance = null;
         }
