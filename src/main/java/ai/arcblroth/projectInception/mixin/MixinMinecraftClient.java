@@ -7,6 +7,7 @@ import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
+import org.apache.logging.log4j.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,33 +22,30 @@ public class MixinMinecraftClient {
 
     @Inject(method = "run", at = @At("HEAD"))
     private void prepareParent2ChildTailer(CallbackInfo ci) {
-        projectInceptionTailer = ProjectInception.outputQueue.createTailer("parent2ChildQueueReader");
-        projectInceptionTailer.direction(TailerDirection.FORWARD);
+        if(ProjectInception.IS_INNER) {
+            ProjectInception.LOGGER.log(Level.INFO, "Building tailer...");
+            projectInceptionTailer = ProjectInception.outputQueue.createTailer("parent2ChildQueueReader");
+            projectInceptionTailer.direction(TailerDirection.FORWARD);
+        }
     }
 
     @Inject(method = "render", at = @At("HEAD"))
     private void prepareParent2ChildQueueMessages(CallbackInfo ci) {
         if(ProjectInception.IS_INNER) {
-            if(projectInceptionTailer.index() > 0) {
-                while(true) {
-                    System.out.println("handling message");
-                    try(DocumentContext dc = projectInceptionTailer.readingDocument()) {
-                        if(dc.isPresent()) {
-                            Bytes<?> bytes = dc.wire().bytes();
-                            Message message = readParent2ChildMessage(bytes);
-                            if(!message.getMessageType().equals(MessageType.I_HAVE_NO_IDEA)
-                            && !message.getMessageType().equals(MessageType.IMAGE)) {
-                                System.out.println(message.getMessageType());
-                                ProjectInception.parent2ChildMessagesToHandle.add(message);
-                            }
-                        } else {
-                            break;
+            while(true) {
+                try(DocumentContext dc = projectInceptionTailer.readingDocument()) {
+                    if(dc.isPresent()) {
+                        Bytes<?> bytes = dc.wire().bytes();
+                        Message message = readParent2ChildMessage(bytes);
+                        if(!message.getMessageType().equals(MessageType.I_HAVE_NO_IDEA)
+                        && !message.getMessageType().equals(MessageType.IMAGE)) {
+                            ProjectInception.parent2ChildMessagesToHandle.add(message);
                         }
+                    } else {
+                        dc.rollbackOnClose();
+                        break;
                     }
                 }
-                System.out.println("done handling messages");
-                // we move past the end by 1
-                projectInceptionTailer.moveToIndex(projectInceptionTailer.index() - 1);
             }
         }
     }
