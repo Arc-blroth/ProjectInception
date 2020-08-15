@@ -11,6 +11,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.List;
+
 import static ai.arcblroth.projectInception.QueueProtocol.*;
 
 @Mixin(Mouse.class)
@@ -25,13 +27,13 @@ public abstract class MixinMouse implements IPreventMouseFromStackOverflow {
     private final MouseMoveMessage projectInceptionMmMessage = new MouseMoveMessage();
     private final MouseSetPosMessage projectInceptionMpMessage = new MouseSetPosMessage();
 
-    @Inject(method = "updateMouse", at = @At("HEAD"))
-    private void updateQueuedMouseEvents(CallbackInfo ci) {
+    @Override
+    public void projectInceptionUpdateMouseEvents(List<Message> events) {
         if(ProjectInception.IS_INNER) {
             projectInceptionPreventStackOverflowPlease = true;
             try {
                 long windowHandle = client.getWindow().getHandle();
-                ProjectInception.parent2ChildMessagesToHandle.removeIf(message -> {
+                events.removeIf(message -> {
                     if (message instanceof MouseButtonMessage) {
                         MouseButtonMessage mbMessage = (MouseButtonMessage) message;
                         onMouseButton(windowHandle, mbMessage.button, mbMessage.message, mbMessage.mods);

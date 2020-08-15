@@ -1,7 +1,11 @@
 package ai.arcblroth.projectInception;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.texture.NativeImage;
+import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.queue.ExcerptTailer;
@@ -18,10 +22,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalLong;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static ai.arcblroth.projectInception.QueueProtocol.*;
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.system.MemoryUtil.memAddress;
 
 public class GameInstance {
 
@@ -34,10 +39,14 @@ public class GameInstance {
     private final ArrayList<String> commandLine;
     private final ExcerptTailer tailer;
     private OptionalLong tailerStartIndex = OptionalLong.empty();
+    private final Thread tailerThread;
     private int lastWidth = 0;
     private int lastHeight = 0;
     private double lastMouseX = 0.5;
     private double lastMouseY = 0.5;
+    private ByteBuffer texture = null;
+    private Identifier textureId = null;
+    private NativeImageBackedTexture lastTextureImage = null;
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -85,6 +94,7 @@ public class GameInstance {
         }
 
         this.tailer = ProjectInception.outputQueue.createTailer("projectInceptionGameInstance").direction(TailerDirection.NONE);
+        this.tailerThread = new Thread(this::tailerThread);
     }
 
     public void start() {
@@ -92,6 +102,7 @@ public class GameInstance {
             try {
                 ProjectInception.LOGGER.log(Level.INFO, "Running command line: " + String.join(" ", commandLine));
                 process = new ProcessBuilder(commandLine).inheritIO().start();
+                this.tailerThread.start();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -127,12 +138,72 @@ public class GameInstance {
         }
     }
 
-    public ByteBuffer getLastTexture(ByteBuffer in) {
+    private void tailerThread() {
+        Thread.currentThread().setName("Game Instance Tailer " + instanceNumber);
+        final AtomicBoolean isTextureUploading = new AtomicBoolean(false);
+        final Object textureUploadLock = new Object();
+        try {
+            while (process.isAlive()) {
+                this.texture = getLastTexture();
+                if (this.textureId == null) {
+                    if (this.texture != null) {
+                        isTextureUploading.set(true);
+                        RenderSystem.recordRenderCall(() -> {
+                            synchronized (textureUploadLock) {
+                                NativeImage image = new NativeImage(NativeImage.Format.ABGR, lastWidth, lastHeight, true, memAddress(this.texture));
+                                this.lastTextureImage = new NativeImageBackedTexture(image);
+                                this.textureId = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("project_inception_game", lastTextureImage);
+                                isTextureUploading.set(false);
+                                textureUploadLock.notify();
+                            }
+                        });
+                    }
+                } else {
+                    if (this.lastTextureImage != null) {
+                        isTextureUploading.set(true);
+                        RenderSystem.recordRenderCall(() -> {
+                            synchronized (textureUploadLock) {
+                                try {
+                                    this.lastTextureImage.upload();
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                isTextureUploading.set(false);
+                                textureUploadLock.notify();
+                            }
+                        });
+                    }
+                }
+                if(isTextureUploading.get()) {
+                    synchronized (textureUploadLock) {
+                        textureUploadLock.wait();
+                    }
+                }
+                int framerateLimit = MinecraftClient.getInstance().getWindow().getFramerateLimit();
+                if(framerateLimit != 0) {
+                    iSleep(1000 / framerateLimit);
+                } else {
+                    iSleep(1);
+                }
+            }
+        } catch (InterruptedException ignored) {
+
+        } finally {
+            RenderSystem.recordRenderCall(() -> {
+                this.lastTextureImage.close();
+                this.lastTextureImage = null;
+                this.texture = null;
+                this.textureId = null;
+            });
+        }
+    }
+
+    private ByteBuffer getLastTexture() {
         synchronized (processLock) {
             if(isProcessBeingKilled) return null;
             if (process == null || !process.isAlive()) return null;
             this.tailer.toEnd();
-            if (this.tailer.index() == 0) return in;
+            if (this.tailer.index() == 0) return texture;
             if(!tailerStartIndex.isPresent()) {
                 tailerStartIndex = OptionalLong.of(this.tailer.toStart().index());
                 this.tailer.toEnd();
@@ -140,7 +211,7 @@ public class GameInstance {
             byte tries = 0; // Prevent softlocking in case the child instance is lagging
             while(!QueueProtocol.peekMessageType(this.tailer).equals(QueueProtocol.MessageType.IMAGE)) {
                 tries++;
-                if(this.tailer.index() - 1 == tailerStartIndex.getAsLong() || tries > 8) return in;
+                if(this.tailer.index() - 1 == tailerStartIndex.getAsLong() || tries > 8) return texture;
                 this.tailer.moveToIndex(this.tailer.index() - 1);
             }
             try (DocumentContext dc = this.tailer.readingDocument()) {
@@ -149,23 +220,35 @@ public class GameInstance {
                     if(bytes.readByte() != QueueProtocol.MessageType.IMAGE.header) throw new IllegalStateException();
                     lastWidth = bytes.readInt();
                     lastHeight = bytes.readInt();
-                    if (in != null) {
-                        in.rewind();
+                    if (texture != null) {
+                        texture.rewind();
                     }
-                    if (in == null || in.capacity() < lastWidth * lastHeight * 4) {
-                        in = BufferUtils.createByteBuffer(lastWidth * lastHeight * 4);
+                    if (texture == null || texture.capacity() < lastWidth * lastHeight * 4) {
+                        texture = BufferUtils.createByteBuffer(lastWidth * lastHeight * 4);
                     }
-                    bytes.read(in);
-                    in.rewind();
-                    for (int i = 0; i < in.capacity(); i += 4) {
+                    bytes.read(texture);
+                    texture.rewind();
+                    for (int i = 0; i < texture.capacity(); i += 4) {
                         // on the sending side alpha is zero, so
                         // we make sure it gets set to 100% here
-                        in.put(i + 3, (byte) 255);
+                        texture.put(i + 3, (byte) 255);
                     }
                 }
-                return in;
+                return texture;
             }
         }
+    }
+
+    private void iSleep(long time) {
+        try {
+            Thread.sleep(time);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    public Identifier getLastTextureId() {
+        return textureId;
     }
 
     public void click(double hitX, double hitY) {
@@ -198,14 +281,6 @@ public class GameInstance {
             lastMouseY = mpMessage.y;
         }
         writeParent2ChildMessage(message, this.tailer.queue().acquireAppender());
-    }
-
-    public int getLastWidth() {
-        return lastWidth;
-    }
-
-    public int getLastHeight() {
-        return lastHeight;
     }
 
     public boolean isAlive() {

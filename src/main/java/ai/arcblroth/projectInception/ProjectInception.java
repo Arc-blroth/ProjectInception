@@ -32,7 +32,6 @@ public class ProjectInception implements ModInitializer {
 	public static final String MAIN_CLASS = "net.fabricmc.loader.launch.knot.KnotClient";
 
 	public static ChronicleQueue outputQueue;
-	public static LinkedList<QueueProtocol.Message> parent2ChildMessagesToHandle = new LinkedList<>();
 	public static GameInstance focusedInstance = null;
 
 	public static ItemGroup STUFF;

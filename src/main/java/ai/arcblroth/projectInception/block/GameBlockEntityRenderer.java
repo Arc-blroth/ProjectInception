@@ -34,14 +34,9 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
     private static final SpriteIdentifier GENERIC = new SpriteIdentifier(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE, new Identifier(ProjectInception.MODID, "block/generic"));
     private static final Identifier POINTER = new Identifier(ProjectInception.MODID, "item/inception_interface");
     private final Sprite pointerSprite;
-    private ByteBuffer texture;
-    private NativeImageBackedTexture lastTextureImage;
-    private Identifier textureId;
 
     public GameBlockEntityRenderer(BlockEntityRenderDispatcher dispatcher) {
         super(dispatcher);
-        this.textureId = null;
-        this.texture = null;
         this.pointerSprite = MinecraftClient.getInstance().getItemRenderer().getModels().getSprite(ProjectInception.INCEPTION_INTERFACE_ITEM);
     }
 
@@ -60,11 +55,6 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
                 state, pos, matrixStack, vertexConsumer,
                 false, new Random(), state.getRenderingSeed(pos),
                 OverlayTexture.DEFAULT_UV);
-        if(blockEntity.isController() && !blockEntity.isOn()) {
-            this.textureId = null;
-            this.texture = null;
-            this.lastTextureImage = null;
-        }
         if(blockEntity.isController() && blockEntity.isOn() && blockEntity.getGameInstance() != null) {
             renderInner(blockEntity, matrixStack, vertexConsumers, light);
         }
@@ -72,27 +62,9 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
     }
 
     private void renderInner(GameBlockEntity blockEntity, MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light) {
-        this.texture = blockEntity.getGameInstance().getLastTexture(this.texture);
-        int lastWidth = blockEntity.getGameInstance().getLastWidth();
-        int lastHeight = blockEntity.getGameInstance().getLastHeight();
-        if(this.textureId == null) {
-            if(this.texture != null) {
-                NativeImage image = new NativeImage(NativeImage.Format.ABGR, lastWidth, lastHeight, true, memAddress(this.texture));
-                this.lastTextureImage = new NativeImageBackedTexture(image);
-                this.textureId = dispatcher.textureManager.registerDynamicTexture("project_inception_game", lastTextureImage);
-            }
-        } else {
-            if(this.lastTextureImage != null) {
-                try {
-                    this.lastTextureImage.upload();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        VertexConsumer vertexConsumer = this.textureId != null
-                ? vertexConsumers.getBuffer(RenderLayer.getText(this.textureId))
+        Identifier textureId = blockEntity.getGameInstance().getLastTextureId();
+        VertexConsumer vertexConsumer = textureId != null
+                ? vertexConsumers.getBuffer(RenderLayer.getText(textureId))
                 : LOADING.getVertexConsumer(vertexConsumers, RenderLayer::getText);
         Direction direction = blockEntity.getCachedState().get(GameBlock.FACING);
         matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-direction.asRotation()));
@@ -106,7 +78,7 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
         int width = blockEntity.getSizeX();
         int height = blockEntity.getSizeY();
 
-        if(this.textureId == null) {
+        if(textureId == null) {
             VertexConsumer bgVertexConsumer = GENERIC.getVertexConsumer(vertexConsumers, RenderLayer::getText);
             Sprite loadingSprite = LOADING.getSprite();
             Sprite bgSprite = GENERIC.getSprite();
