@@ -31,6 +31,12 @@
 
   "accessWidener": "project_inception.aw",
 
+  "jars": [
+    {
+      "file": "Fabric-ASM-${mm_version}.jar"
+    }
+  ],
+
   "depends": {
     "fabricloader": ">=0.7.8",
     "fabric": "*",

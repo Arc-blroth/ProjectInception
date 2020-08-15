@@ -1,5 +1,6 @@
 plugins {
 	id 'fabric-loom' version '0.5.9'
+	id 'com.github.johnrengelman.shadow' version '6.0.0'
 	id 'maven-publish'
 }
 
@@ -17,6 +18,10 @@ repositories {
 	}
 }
 
+configurations {
+	nest
+}
+
 dependencies {
 	//to change the versions see the gradle.properties file
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
@@ -26,10 +31,13 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	modCompile "com.github.Chocohead:Fabric-ASM:2.1"
-	include "com.github.Chocohead:Fabric-ASM:2.1"
+	modImplementation "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
+	nest "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
 
-	implementation 'net.openhft:chronicle-queue:5.19.76'
+	implementation "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
+	shadow "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
+	implementation "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
+	shadow "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
 }
 
 processResources {
@@ -37,12 +45,17 @@ processResources {
 
 	from(sourceSets.main.resources.srcDirs) {
 		include "fabric.mod.json"
-		expand "version": project.version
+		expand ([
+			version: project.version,
+			mm_version: project.mm_version
+		])
 	}
 
 	from(sourceSets.main.resources.srcDirs) {
 		exclude "fabric.mod.json"
 	}
+
+	from configurations.nest
 }
 
 minecraft {
@@ -66,6 +79,30 @@ tasks.withType(JavaCompile) {
 
 jar {
 	from "LICENSE"
+}
+
+task removeStuffForShadowJar(type: Delete) {
+	delete configurations.nest.getFiles().collect { "${buildDir}/resources/main/" + it.getName() }
+}
+
+// Shadow Jar stuff based from Hephaestus-Dev
+shadowJar {
+	dependsOn removeStuffForShadowJar
+
+	configurations = [project.configurations.shadow]
+	archiveClassifier.set('shadow')
+
+	// idk why these packages exist in the jar
+	exclude 'com/sun/jna/**'
+	exclude 'java/**'
+	exclude 'org/intellij/**'
+	exclude 'org/jetbrains/**'
+}
+
+remapJar {
+	dependsOn shadowJar
+	input.set shadowJar.archiveFile.get()
+	from configurations.nest
 }
 
 // configure the maven publication

@@ -1,7 +1,6 @@
 package ai.arcblroth.projectInception;
 
 import com.chocohead.mm.api.ClassTinkerers;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.openhft.chronicle.queue.ChronicleQueue;
@@ -74,10 +73,10 @@ public class ProjectInceptionEarlyRiser implements Runnable {
     }
 
     public static void initChronicleQueues(File queueDir) {
-        ProjectInceptionEarlyRiser.yeetChronicleQueues(queueDir, true);
+        yeetChronicleQueues(queueDir, true);
         // Because we need to reuse this queue, we don't wrap this in a try
         // with resources. The queue is closed in MixinWindow#closeChronicleQueue.
-        ProjectInception.LOGGER.log(Level.INFO, "Initializing queue...");
+        LOGGER.log(Level.INFO, "Initializing queue...");
         ProjectInception.outputQueue = ChronicleQueue
                 .singleBuilder(queueDir)
                 .rollCycle(RollCycles.MINUTELY)
