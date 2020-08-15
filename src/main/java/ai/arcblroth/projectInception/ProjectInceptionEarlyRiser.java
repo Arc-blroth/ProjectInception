@@ -1,6 +1,7 @@
 package ai.arcblroth.projectInception;
 
 import com.chocohead.mm.api.ClassTinkerers;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.openhft.chronicle.queue.ChronicleQueue;
@@ -38,7 +39,10 @@ public class ProjectInceptionEarlyRiser implements Runnable {
         }
         if(IS_INNER) {
             // Force the window to not appear
-            ClassTinkerers.addTransformation("net/minecraft/client/util/Window", classNode -> {
+            final String windowClassName = FabricLoader.getInstance().isDevelopmentEnvironment()
+                    ? "net/minecraft/client/util/Window"
+                    : "net/minecraft/class_1041";
+            ClassTinkerers.addTransformation(windowClassName, classNode -> {
                 classNode.methods.stream().filter(method -> method.name.equals("<init>")).forEach(method -> {
                     ListIterator<AbstractInsnNode> insns = method.instructions.iterator();
                     MethodInsnNode glfwDefaultWindowHints = (MethodInsnNode) findInsn(method, insn ->

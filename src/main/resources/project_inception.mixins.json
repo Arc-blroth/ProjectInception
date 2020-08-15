@@ -7,10 +7,10 @@
     "MixinClientMain",
     "MixinHeldItemRenderer",
     "MixinItemstack",
+    "MixinKeyboard",
     "MixinMinecraftClient",
     "MixinMouse",
-    "MixinRenderSystem",
-    "MixinWindow"
+    "MixinRenderSystem"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -1,7 +1,9 @@
 package ai.arcblroth.projectInception.mixin;
 
 import ai.arcblroth.projectInception.ProjectInception;
-import ai.arcblroth.projectInception.client.IPreventMouseFromStackOverflow;
+import ai.arcblroth.projectInception.duck.IAmAKeyboard;
+import ai.arcblroth.projectInception.duck.IPreventMouseFromStackOverflow;
+import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.openhft.chronicle.bytes.Bytes;
@@ -25,8 +27,9 @@ import static ai.arcblroth.projectInception.QueueProtocol.*;
 public class MixinMinecraftClient {
 
     @Shadow public Mouse mouse;
+    @Shadow public Keyboard keyboard;
     private ExcerptTailer projectInceptionTailer;
-    private List<Message> inputEvents;
+    private ArrayList<Message> inputEvents;
 
     @Inject(method = "run", at = @At("HEAD"))
     private void prepareParent2ChildTailer(CallbackInfo ci) {
@@ -34,7 +37,7 @@ public class MixinMinecraftClient {
             ProjectInception.LOGGER.log(Level.INFO, "Building tailer...");
             projectInceptionTailer = ProjectInception.outputQueue.createTailer("parent2ChildQueueReader");
             projectInceptionTailer.direction(TailerDirection.FORWARD);
-            inputEvents = Collections.synchronizedList(new ArrayList<>());
+            inputEvents = new ArrayList<>();
         }
     }
 
@@ -60,6 +63,9 @@ public class MixinMinecraftClient {
             }
             if(this.mouse instanceof IPreventMouseFromStackOverflow) {
                 ((IPreventMouseFromStackOverflow) this.mouse).projectInceptionUpdateMouseEvents(inputEvents);
+            }
+            if(this.keyboard instanceof IAmAKeyboard) {
+                ((IAmAKeyboard) this.keyboard).projectInceptionUpdateKeyboardEvents(inputEvents);
             }
         }
     }

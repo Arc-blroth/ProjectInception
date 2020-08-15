@@ -1,4 +1,4 @@
-package ai.arcblroth.projectInception.client;
+package ai.arcblroth.projectInception.duck;
 
 import ai.arcblroth.projectInception.QueueProtocol;
 

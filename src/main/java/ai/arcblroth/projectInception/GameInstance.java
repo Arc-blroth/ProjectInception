@@ -8,6 +8,7 @@ import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.openhft.chronicle.bytes.Bytes;
+import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
@@ -47,6 +48,8 @@ public class GameInstance {
     private ByteBuffer texture = null;
     private Identifier textureId = null;
     private NativeImageBackedTexture lastTextureImage = null;
+    private final Object send2ChildLock = new Object();
+    private ArrayList<Message> messages2ChildToSend = new ArrayList<>();
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -54,6 +57,12 @@ public class GameInstance {
                 ProjectInception.LOGGER.log(Level.INFO, "Destroying game instances on exit...");
                 g.stop(false);
             });
+            if(ProjectInception.outputQueue != null
+            && !ProjectInception.outputQueue.isClosed()) {
+                ProjectInception.outputQueue.close();
+            }
+            File queueDir = new File(MinecraftClient.getInstance().runDirectory, "projectInception");
+            ProjectInceptionEarlyRiser.yeetChronicleQueues(queueDir, false);
         }));
     }
 
@@ -142,8 +151,15 @@ public class GameInstance {
         Thread.currentThread().setName("Game Instance Tailer " + instanceNumber);
         final AtomicBoolean isTextureUploading = new AtomicBoolean(false);
         final Object textureUploadLock = new Object();
+        final ExcerptAppender appender = this.tailer.queue().acquireAppender();
         try {
             while (process.isAlive()) {
+                synchronized (send2ChildLock) {
+                    if (messages2ChildToSend.size() > 0) {
+                        messages2ChildToSend.forEach((message) -> writeParent2ChildMessage(message, appender));
+                        messages2ChildToSend.clear();
+                    }
+                }
                 this.texture = getLastTexture();
                 if (this.textureId == null) {
                     if (this.texture != null) {
@@ -257,13 +273,13 @@ public class GameInstance {
         message1.y = hitY;
         lastMouseX = hitX;
         lastMouseY = hitY;
-        writeParent2ChildMessage(message1, this.tailer.queue().acquireAppender());
+        sendParent2ChildMessage(message1);
         MouseButtonMessage message2 = new MouseButtonMessage();
         message2.button = GLFW_MOUSE_BUTTON_LEFT;
         message2.message = GLFW_PRESS;
-        writeParent2ChildMessage(message2, this.tailer.queue().acquireAppender());
+        sendParent2ChildMessage(message2);
         message2.message = GLFW_RELEASE;
-        writeParent2ChildMessage(message2, this.tailer.queue().acquireAppender());
+        sendParent2ChildMessage(message2);
     }
 
     public void sendParent2ChildMessage(Message message) {
@@ -280,7 +296,9 @@ public class GameInstance {
             lastMouseX = mpMessage.x;
             lastMouseY = mpMessage.y;
         }
-        writeParent2ChildMessage(message, this.tailer.queue().acquireAppender());
+        synchronized (send2ChildLock) {
+            this.messages2ChildToSend.add(message);
+        }
     }
 
     public boolean isAlive() {

@@ -1,7 +1,7 @@
 package ai.arcblroth.projectInception.mixin;
 
 import ai.arcblroth.projectInception.ProjectInception;
-import ai.arcblroth.projectInception.client.IPreventMouseFromStackOverflow;
+import ai.arcblroth.projectInception.duck.IPreventMouseFromStackOverflow;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import org.spongepowered.asm.mixin.Mixin;
