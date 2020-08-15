@@ -25,11 +25,11 @@ public class MixinClientMain {
     @Inject(method = "main", at = @At("HEAD"), cancellable = true)
     private static void notmain(String[] args, CallbackInfo ci) {
         // enabling slf4j makes ChronicleQueue happy but makes netty sad
-        InternalLoggerFactory.setDefaultFactory(Log4J2LoggerFactory.INSTANCE);
+        InternalLoggerFactory.setDefaultFactory(Log4JLoggerFactory.INSTANCE);
 
         // For reasons that make no sense, this class will unexist
         // later if it is not referenced here.
-        SharedConstants.getGameVersion();
+        // SharedConstants.getGameVersion();
 
         ProjectInceptionEarlyRiser.ARGUMENTS = Arrays.copyOf(args, args.length);
         if(ProjectInceptionEarlyRiser.IS_INNER && ProjectInceptionEarlyRiser.USE_FAUX_INNER) {
