@@ -20,6 +20,7 @@ import net.openhft.chronicle.wire.DocumentContext;
  *         {@link MessageType#IMAGE} | child &rarr; parent | RGBA encoded image.<br>
  *         <code>int fboWidth</code><br>
  *         <code>int fboHeight</code><br>
+ *         <code>boolean showCursor</code><br>
  *         <code>ByteBuffer image // size fboWidth * fboHeight * 4</code><br>
  *     </li>
  *     <li>
@@ -39,7 +40,7 @@ import net.openhft.chronicle.wire.DocumentContext;
  *         <code>double y</code><br>
  *     </li>
  *     <li>
- *         {@link MessageType#MOUSE_SET_POS} | parent &rarr; child | coordinates are decimals of the window dimensions
+ *         {@link MessageType#MOUSE_SET_POS} | parent &rarr; child | coordinates are decimals of the window dimensions<br>
  *         <code>double x</code><br>
  *         <code>double y</code><br>
  *     </li>
@@ -91,6 +92,7 @@ public class QueueProtocol {
     // public static final class ImageMessage extends Message {
     //     public int fboWidth;
     //     public int fboHeight;
+    //     public boolean showCursor;
     //     public ByteBuffer image;
     //     @Override public MessageType getMessageType() { return MessageType.IMAGE; }
     // }

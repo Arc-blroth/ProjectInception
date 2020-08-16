@@ -48,6 +48,7 @@ public class MixinRenderSystem {
                 b.writeByte(QueueProtocol.MessageType.IMAGE.header);
                 b.writeInt(fboWidth);
                 b.writeInt(fboHeight);
+                b.writeBoolean(!(MinecraftClient.getInstance().mouse.isCursorLocked() || ProjectInception.focusedInstance != null));
                 UnsafeMemory.UNSAFE.copyMemory(
                         memAddress(projectInceptionOutput),
                         b.addressForWrite(b.writePosition()),

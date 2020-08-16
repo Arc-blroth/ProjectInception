@@ -55,7 +55,7 @@ public class GameBlock extends BlockWithEntity {
                         GameMultiblock multiblock = GameMultiblock.getMultiblock(world, pos);
                         if (multiblock != null) {
                             multiblock.forEachBlockEntity((left, y, blockEntity) -> {
-                                blockEntity.turnOn(multiblock.controllerPos, (float) left / multiblock.sizeX, (float) y / multiblock.sizeY, multiblock.sizeX, multiblock.sizeY);
+                                blockEntity.turnOn(multiblock, left, y);
                             });
                             BlockEntity controller = world.getBlockEntity(multiblock.controllerPos);
                             if (controller instanceof GameBlockEntity) {

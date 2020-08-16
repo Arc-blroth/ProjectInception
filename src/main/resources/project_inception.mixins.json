@@ -10,7 +10,8 @@
     "MixinKeyboard",
     "MixinMinecraftClient",
     "MixinMouse",
-    "MixinRenderSystem"
+    "MixinRenderSystem",
+    "MixinSplashTextResourceSupplier"
   ],
   "injectors": {
     "defaultRequire": 1

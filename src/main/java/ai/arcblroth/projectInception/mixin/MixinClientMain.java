@@ -5,19 +5,21 @@ import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.QueueProtocol;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
-import io.netty.util.internal.logging.Log4JLoggerFactory;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import net.minecraft.SharedConstants;
+import net.minecraft.client.WindowSettings;
 import net.minecraft.client.main.Main;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.OptionalInt;
 
 @Mixin(Main.class)
 public class MixinClientMain {
@@ -44,6 +46,7 @@ public class MixinClientMain {
                         b.writeByte(QueueProtocol.MessageType.IMAGE.header);
                         b.writeInt(16);
                         b.writeInt(16);
+                        b.writeBoolean(true);
                         final byte red = (byte) 46,
                                    blue = (byte) 171,
                                    green = (byte) 255,
@@ -63,6 +66,22 @@ public class MixinClientMain {
                 ci.cancel();
             }
         }
+    }
+
+    @Redirect(method = "main", at = @At(value = "NEW", target = "Lnet/minecraft/client/WindowSettings;"))
+    private static WindowSettings buildWindowSettingsWithMultiblockSize(int width, int height, OptionalInt fullscreenWidth, OptionalInt fullscreenHeight, boolean fullscreen) {
+        if(ProjectInceptionEarlyRiser.IS_INNER) {
+            if (System.getProperty(ProjectInceptionEarlyRiser.ARG_DISPLAY_WIDTH) != null) {
+                width = Integer.parseInt(System.getProperty(ProjectInceptionEarlyRiser.ARG_DISPLAY_WIDTH));
+                fullscreenWidth = OptionalInt.of(width);
+            }
+            if (System.getProperty(ProjectInceptionEarlyRiser.ARG_DISPLAY_HEIGHT) != null) {
+                height = Integer.parseInt(System.getProperty(ProjectInceptionEarlyRiser.ARG_DISPLAY_HEIGHT));
+                fullscreenHeight = OptionalInt.of(height);
+            }
+            fullscreen = false;
+        }
+        return new WindowSettings(width, height, fullscreenWidth, fullscreenHeight, fullscreen);
     }
 
 }

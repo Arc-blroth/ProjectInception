@@ -16,8 +16,8 @@ You are solely responsible for any crashes/damages to your
 computer or sanity that this mod may cause.
 
 All issues should be reported here using Github Issues.
-Please check the [below FAQ](#Known-Issues--FAQ) before 
-opening an issue - it'll save both you and me lots of time.
+**Please check the [below FAQ](#Known-Issues--FAQ) before 
+opening an issue** - it'll save both you and me lots of time.
 When opening an issue, please follow the template and include
 relevant logs *in the form of an external pastebin link*.
 
@@ -34,6 +34,10 @@ sanity, feel free to submit pull requests :).
 * Project Inception uses memory-mapped files for
   interprocess communication. This means that this mod
   WILL NOT work if you happen to run MC from a network drive.
+  
+* As of right now you should **only run 1 inception
+  game at a time** - the code that handles interprocess
+  communication isn't set up to handle multiple games yet.
   
 * Q: Why is multiplayer disabled in the inception'ed game?
 

@@ -5,12 +5,15 @@ import ai.arcblroth.projectInception.QueueProtocol;
 import ai.arcblroth.projectInception.duck.IAmAKeyboard;
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
+import org.apache.logging.log4j.Level;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ConcurrentModificationException;
 import java.util.List;
 
 import static ai.arcblroth.projectInception.QueueProtocol.*;
@@ -18,7 +21,7 @@ import static ai.arcblroth.projectInception.QueueProtocol.*;
 @Mixin(Keyboard.class)
 public class MixinKeyboard implements IAmAKeyboard {
 
-    @Shadow private MinecraftClient client;
+    @Shadow @Final private MinecraftClient client;
     private final KeyboardKeyMessage projectInceptionKeMessage = new KeyboardKeyMessage();
     private final KeyboardCharMessage projectInceptionKcMessage = new KeyboardCharMessage();
 
@@ -26,18 +29,23 @@ public class MixinKeyboard implements IAmAKeyboard {
     public void projectInceptionUpdateKeyboardEvents(List<QueueProtocol.Message> events) {
         if(ProjectInception.IS_INNER) {
             long windowHandle = client.getWindow().getHandle();
-            events.removeIf(message -> {
-                if (message instanceof KeyboardKeyMessage) {
-                    KeyboardKeyMessage keMessage = (KeyboardKeyMessage) message;
-                    onKey(windowHandle, keMessage.key, keMessage.scancode, keMessage.action, keMessage.mods);
-                    return true;
-                } else if (message instanceof KeyboardCharMessage) {
-                    KeyboardCharMessage kcMessage = (KeyboardCharMessage) message;
-                    onChar(windowHandle, kcMessage.codepoint, kcMessage.mods);
-                    return true;
-                }
-                return false;
-            });
+            try {
+                events.removeIf(message -> {
+                    if (message instanceof KeyboardKeyMessage) {
+                        KeyboardKeyMessage keMessage = (KeyboardKeyMessage) message;
+                        onKey(windowHandle, keMessage.key, keMessage.scancode, keMessage.action, keMessage.mods);
+                        return true;
+                    } else if (message instanceof KeyboardCharMessage) {
+                        KeyboardCharMessage kcMessage = (KeyboardCharMessage) message;
+                        onChar(windowHandle, kcMessage.codepoint, kcMessage.mods);
+                        return true;
+                    }
+                    return false;
+                });
+            }  catch (ConcurrentModificationException e) {
+                // see note in {@link MixinMouse#projectInceptionUpdateMouseEvents}
+                ProjectInception.LOGGER.log(Level.WARN, "ConcurrentModificationException whilst processing Keyboard events");
+            }
         }
     }
 

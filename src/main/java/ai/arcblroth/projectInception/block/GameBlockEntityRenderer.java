@@ -130,16 +130,18 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
                     0.0F, 1.0F,
                     0.0F, 1.0F,
                     light);
-            VertexConsumer ptVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getText(pointerSprite.getAtlas().getId()));
-            float left = 1F - (float) blockEntity.getGameInstance().getLastMouseX();
-            float top  = 1F - (float) blockEntity.getGameInstance().getLastMouseY();
-            renderQuads(ptVertexConsumer, matrix4f,
-                    -width + 1 + left * width - 0.1875F, -width + 1 + left * width,
-                    -height + 1 + top * height - 0.25F, -height + 1 + top * height,
-                    -1.015F,
-                    pointerSprite.getMinU() + (pointerSprite.getMaxU() - pointerSprite.getMinU()) / 4, pointerSprite.getMaxU(),
-                    pointerSprite.getMaxV(), pointerSprite.getMinV(),
-                    light);
+            if(blockEntity.getGameInstance().shouldShowCursor()) {
+                VertexConsumer ptVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getText(pointerSprite.getAtlas().getId()));
+                float left = 1F - (float) blockEntity.getGameInstance().getLastMouseX();
+                float top = 1F - (float) blockEntity.getGameInstance().getLastMouseY();
+                renderQuads(ptVertexConsumer, matrix4f,
+                        -width + 1 + left * width - 0.1875F, -width + 1 + left * width,
+                        -height + 1 + top * height - 0.25F, -height + 1 + top * height,
+                        -1.015F,
+                        pointerSprite.getMinU() + (pointerSprite.getMaxU() - pointerSprite.getMinU()) / 4, pointerSprite.getMaxU(),
+                        pointerSprite.getMaxV(), pointerSprite.getMinV(),
+                        light);
+            }
         }
     }
 

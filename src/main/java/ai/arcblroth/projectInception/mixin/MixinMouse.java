@@ -4,6 +4,8 @@ import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.duck.IPreventMouseFromStackOverflow;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import org.apache.logging.log4j.Level;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -11,6 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ConcurrentModificationException;
 import java.util.List;
 
 import static ai.arcblroth.projectInception.QueueProtocol.*;
@@ -18,7 +21,7 @@ import static ai.arcblroth.projectInception.QueueProtocol.*;
 @Mixin(Mouse.class)
 public abstract class MixinMouse implements IPreventMouseFromStackOverflow {
 
-    @Shadow private MinecraftClient client;
+    @Shadow @Final private MinecraftClient client;
     @Shadow private boolean hasResolutionChanged;
     private boolean projectInceptionPreventStackOverflowPlease = false;
 
@@ -62,6 +65,12 @@ public abstract class MixinMouse implements IPreventMouseFromStackOverflow {
                     }
                     return false;
                 });
+            } catch (ConcurrentModificationException e) {
+                // I honestly have no idea why this occurs
+                // as the list should only be modified in one
+                // location at one time
+                // perhaps forced ticks are breaking it? idk
+                ProjectInception.LOGGER.log(Level.WARN, "ConcurrentModificationException whilst processing Mouse events");
             } finally {
                 projectInceptionPreventStackOverflowPlease = false;
             }

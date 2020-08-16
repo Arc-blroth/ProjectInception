@@ -38,7 +38,7 @@ public class BlockItemWithMagicness extends BlockItem implements IColoredTooltip
     @Override
     @Environment(EnvType.CLIENT)
     public boolean hasGlint(ItemStack stack) {
-        return true;
+        return glint;
     }
 
     @Override

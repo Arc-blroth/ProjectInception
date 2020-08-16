@@ -14,6 +14,7 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.registry.Registry;
@@ -30,6 +31,7 @@ public class ProjectInception implements ModInitializer {
 	public static final boolean IS_INNER = ProjectInceptionEarlyRiser.IS_INNER;
 	public static final String[] ARGUMENTS = ProjectInceptionEarlyRiser.ARGUMENTS;
 	public static final String MAIN_CLASS = "net.fabricmc.loader.launch.knot.KnotClient";
+	public static final String DEV_MAIN_CLASS = "net.fabricmc.devlaunchinjector.Main";
 
 	public static ChronicleQueue outputQueue;
 	public static GameInstance focusedInstance = null;
@@ -46,7 +48,7 @@ public class ProjectInception implements ModInitializer {
     @Override
 	public void onInitialize() {
     	LOGGER.log(Level.INFO, "Registering stuff...");
-		STUFF = FabricItemGroupBuilder.create(new Identifier(MODID, "stuff")).build();
+		STUFF = FabricItemGroupBuilder.create(new Identifier(MODID, "stuff")).icon(() -> new ItemStack(INCEPTION_BLOCK_ITEM)).build();
 
 		INCEPTION_BLOCK = Registry.register(Registry.BLOCK, new Identifier(MODID, "inception_block"),
 				new InceptionBlock(AbstractBlock.Settings.of(Material.METAL).strength(2).emissiveLighting((s, v, w) -> true)));
@@ -57,7 +59,7 @@ public class ProjectInception implements ModInitializer {
 		GAME_BLOCK_ENTITY_TYPE = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(MODID, "game_block"),
 				BlockEntityType.Builder.create(GameBlockEntity::new, GAME_BLOCK).build(null));
 		GAME_BLOCK_ITEM = Registry.register(Registry.ITEM, new Identifier(MODID, "game_block"),
-				new BlockItemWithMagicness(GAME_BLOCK, new Item.Settings().group(STUFF).rarity(Rarity.RARE), true, true));
+				new BlockItemWithMagicness(GAME_BLOCK, new Item.Settings().group(STUFF).rarity(Rarity.RARE), false, true));
 		INCEPTION_INTERFACE_ITEM = Registry.register(Registry.ITEM, new Identifier(MODID, "inception_interface"),
 				new InceptionInterfaceItem(new Item.Settings().group(STUFF).rarity(Rarity.RARE)));
 	}

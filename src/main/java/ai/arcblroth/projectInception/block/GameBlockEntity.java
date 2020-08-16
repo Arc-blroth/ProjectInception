@@ -12,6 +12,7 @@ import net.minecraft.util.math.BlockPos;
 
 public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntityClientSerializable {
 
+    private GameMultiblock multiblock;
     private BlockPos controllerBlockPos = null;
     private float offsetX = 0;
     private float offsetY = 0;
@@ -25,13 +26,14 @@ public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntit
         super(ProjectInception.GAME_BLOCK_ENTITY_TYPE);
     }
 
-    public void turnOn(BlockPos controllerBlockPos, float offsetX, float offsetY, int sizeX, int sizeY) {
+    public void turnOn(GameMultiblock multiblock, int left, int top) {
         this.isOn = true;
-        this.controllerBlockPos = controllerBlockPos;
-        this.offsetX = offsetX;
-        this.offsetY = offsetY;
-        this.sizeX = sizeX;
-        this.sizeY = sizeY;
+        this.multiblock = multiblock;
+        this.controllerBlockPos = multiblock.controllerPos;
+        this.offsetX = (float) left / multiblock.sizeX;
+        this.offsetY = (float) top / multiblock.sizeY;
+        this.sizeX = multiblock.sizeX;
+        this.sizeY = multiblock.sizeY;
         this.markDirty();
         if(!world.isClient) this.sync();
     }
@@ -51,6 +53,7 @@ public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntit
             BlockEntity blockEntity = world.getBlockEntity(controllerBlockPos);
             if(!(blockEntity instanceof GameBlockEntity)) {
                 isOn = false;
+                multiblock = null;
                 controllerBlockPos = null;
                 gameInstance = null;
                 offsetX = offsetY = sizeX = sizeY = 0;
@@ -58,6 +61,7 @@ public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntit
                 if(!world.isClient) this.sync();
             } else if (!((GameBlockEntity) blockEntity).isOn) {
                 isOn = false;
+                multiblock = null;
                 controllerBlockPos = null;
                 gameInstance = null;
                 offsetX = offsetY = sizeX = sizeY = 0;
@@ -102,8 +106,8 @@ public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntit
 
     public void setController(boolean controller) {
         isController = controller;
-        if(this.world != null && this.world.isClient) {
-            gameInstance = new GameInstance();
+        if(this.world != null && this.world.isClient && this.multiblock != null) {
+            gameInstance = new GameInstance(this.multiblock);
             gameInstance.start();
         }
         this.markDirty();
