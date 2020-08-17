@@ -19,9 +19,11 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.registry.Registry;
 import net.openhft.chronicle.queue.ChronicleQueue;
+import net.openhft.chronicle.queue.RollCycles;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
 import java.util.LinkedList;
 
 public class ProjectInception implements ModInitializer {
@@ -33,7 +35,7 @@ public class ProjectInception implements ModInitializer {
 	public static final String MAIN_CLASS = "net.fabricmc.loader.launch.knot.KnotClient";
 	public static final String DEV_MAIN_CLASS = "net.fabricmc.devlaunchinjector.Main";
 
-	public static ChronicleQueue outputQueue;
+	public static ChronicleQueue toParentQueue = null;
 	public static GameInstance focusedInstance = null;
 
 	public static ItemGroup STUFF;
@@ -45,7 +47,7 @@ public class ProjectInception implements ModInitializer {
 	public static BlockItemWithMagicness INCEPTION_BLOCK_ITEM;
 	public static InceptionInterfaceItem INCEPTION_INTERFACE_ITEM;
 
-    @Override
+	@Override
 	public void onInitialize() {
     	LOGGER.log(Level.INFO, "Registering stuff...");
 		STUFF = FabricItemGroupBuilder.create(new Identifier(MODID, "stuff")).icon(() -> new ItemStack(INCEPTION_BLOCK_ITEM)).build();

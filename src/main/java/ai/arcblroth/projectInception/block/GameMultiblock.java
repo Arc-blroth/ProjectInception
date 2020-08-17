@@ -31,26 +31,35 @@ public class GameMultiblock {
             int rightX = 0;
             int bottomY = pos.getY();
 
+            BlockPos.Mutable queryPos = pos.mutableCopy();
+            BlockPos queryPos2 = null;
+
             // Traverse up
             do {
-                topY++;
-            } while (world.getBlockEntity(new BlockPos(pos.getX(), topY, pos.getZ())) instanceof GameBlockEntity
-                    && world.getBlockState(new BlockPos(pos.getX(), topY, pos.getZ())).get(GameBlock.FACING).equals(facing));
+                queryPos.setY(++topY);
+            } while (world.getBlockEntity(queryPos) instanceof GameBlockEntity
+                    && world.getBlockState(queryPos).get(GameBlock.FACING).equals(facing)
+                    && !((GameBlockEntity) world.getBlockEntity(queryPos)).isOn());
             // Traverse down
             do {
-                bottomY--;
-            } while (world.getBlockEntity(new BlockPos(pos.getX(), bottomY, pos.getZ())) instanceof GameBlockEntity
-                    && world.getBlockState(new BlockPos(pos.getX(), bottomY, pos.getZ())).get(GameBlock.FACING).equals(facing));
+                queryPos.setY(--bottomY);
+            } while (world.getBlockEntity(queryPos) instanceof GameBlockEntity
+                    && world.getBlockState(queryPos).get(GameBlock.FACING).equals(facing)
+                    && !((GameBlockEntity) world.getBlockEntity(queryPos)).isOn());
             // Traverse left
             do {
                 leftX++;
-            } while (world.getBlockEntity(pos.offset(left, leftX)) instanceof GameBlockEntity
-                    && world.getBlockState(pos.offset(left, leftX)).get(GameBlock.FACING).equals(facing));
+                queryPos2 = pos.offset(left, leftX);
+            } while (world.getBlockEntity(queryPos2) instanceof GameBlockEntity
+                    && world.getBlockState(queryPos2).get(GameBlock.FACING).equals(facing)
+                    && !((GameBlockEntity) world.getBlockEntity(queryPos2)).isOn());
             // Traverse right
             do {
                 rightX++;
-            } while (world.getBlockEntity(pos.offset(right, rightX)) instanceof GameBlockEntity
-                    && world.getBlockState(pos.offset(right, rightX)).get(GameBlock.FACING).equals(facing));
+                queryPos2 = pos.offset(right, rightX);
+            } while (world.getBlockEntity(queryPos2) instanceof GameBlockEntity
+                    && world.getBlockState(queryPos2).get(GameBlock.FACING).equals(facing)
+                    && !((GameBlockEntity) world.getBlockEntity(queryPos2)).isOn());
 
             GameMultiblock multiblock = new GameMultiblock();
             multiblock.world = world;

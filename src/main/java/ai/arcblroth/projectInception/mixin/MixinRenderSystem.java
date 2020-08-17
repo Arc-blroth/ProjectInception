@@ -7,9 +7,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Window;
 import net.openhft.chronicle.core.UnsafeMemory;
-import net.openhft.chronicle.queue.ChronicleQueue;
-import net.openhft.chronicle.queue.RollCycles;
-import org.apache.logging.log4j.Level;
 import org.lwjgl.BufferUtils;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,7 +26,11 @@ public class MixinRenderSystem {
 
     @Inject(method = "initRenderer", at = @At("RETURN"))
     private static void initChronicleQueue(CallbackInfo ci) {
-        ProjectInceptionEarlyRiser.initChronicleQueues(new File(MinecraftClient.getInstance().runDirectory, "projectInception"));
+        if(ProjectInception.IS_INNER) {
+            ProjectInceptionEarlyRiser.initChronicleQueues(
+                    new File(MinecraftClient.getInstance().runDirectory, "projectInception" + File.separator + ProjectInceptionEarlyRiser.INSTANCE_PREFIX)
+            );
+        }
     }
 
     @Inject(method = "flipFrame", at = @At("RETURN"))
@@ -44,7 +45,7 @@ public class MixinRenderSystem {
                 projectInceptionOutput = BufferUtils.createByteBuffer(fboWidth * fboHeight * 4);
             }
             glReadPixels(0, 0, fboWidth, fboHeight, GL_RGBA, GL_UNSIGNED_BYTE, projectInceptionOutput);
-            ProjectInception.outputQueue.acquireAppender().writeBytes(b -> {
+            ProjectInception.toParentQueue.acquireAppender().writeBytes(b -> {
                 b.writeByte(QueueProtocol.MessageType.IMAGE.header);
                 b.writeInt(fboWidth);
                 b.writeInt(fboHeight);

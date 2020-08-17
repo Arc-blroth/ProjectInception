@@ -35,10 +35,6 @@ sanity, feel free to submit pull requests :).
   interprocess communication. This means that this mod
   WILL NOT work if you happen to run MC from a network drive.
   
-* As of right now you should **only run 1 inception
-  game at a time** - the code that handles interprocess
-  communication isn't set up to handle multiple games yet.
-  
 * Q: Why is multiplayer disabled in the inception'ed game?
 
   A: Minecraft's authentication system disallows you from

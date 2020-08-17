@@ -8,6 +8,7 @@ import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.util.Identifier;
 import net.openhft.chronicle.bytes.Bytes;
+import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.TailerDirection;
@@ -33,6 +34,7 @@ import static org.lwjgl.system.MemoryUtil.memAddress;
 public class GameInstance {
 
     private static int instanceCounter = 0;
+    private static final Object cleanUpLock = new Object();
     private static final ArrayList<GameInstance> instancesToCleanUp = new ArrayList<>();
     private final int instanceNumber;
 
@@ -43,6 +45,7 @@ public class GameInstance {
     private boolean isProcessBeingKilled = false;
     private final ArrayList<String> commandLine;
 
+    private final ChronicleQueue childQueue;
     private final ExcerptTailer tailer;
     private OptionalLong tailerStartIndex = OptionalLong.empty();
     private final Thread tailerThread;
@@ -62,14 +65,13 @@ public class GameInstance {
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            instancesToCleanUp.forEach(g -> {
-                ProjectInception.LOGGER.log(Level.INFO, "Destroying game instances on exit...");
-                g.stop(false);
-            });
-            if(ProjectInception.outputQueue != null
-            && !ProjectInception.outputQueue.isClosed()) {
-                ProjectInception.outputQueue.close();
+            ProjectInception.LOGGER.log(Level.INFO, "Destroying game instances on exit...");
+            stopAllGameInstances();
+            if(ProjectInception.toParentQueue != null
+            && !ProjectInception.toParentQueue.isClosed()) {
+                ProjectInception.toParentQueue.close();
             }
+            iSleep(1000);
             File queueDir = new File(MinecraftClient.getInstance().runDirectory, "projectInception");
             ProjectInceptionEarlyRiser.yeetChronicleQueues(queueDir, false);
         }));
@@ -78,7 +80,9 @@ public class GameInstance {
     public GameInstance(GameMultiblock multiblock) {
         instanceNumber = instanceCounter;
         instanceCounter++;
-        instancesToCleanUp.add(this);
+        synchronized (cleanUpLock) {
+            instancesToCleanUp.add(this);
+        }
 
         this.multiblock = multiblock;
 
@@ -102,11 +106,13 @@ public class GameInstance {
                 commandLine.add("-Djava.library.path=" + System.getProperty("java.library.path"));
             }
         }
+        String newInstancePrefix = ProjectInceptionEarlyRiser.INSTANCE_PREFIX + "-" + instanceNumber;
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_IS_INNER + "=true");
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_WIDTH
                 + "=" + (multiblock.sizeX * ProjectInceptionEarlyRiser.DISPLAY_SCALE));
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_HEIGHT
                 + "=" + (multiblock.sizeY * ProjectInceptionEarlyRiser.DISPLAY_SCALE));
+        commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_INSTANCE_PREFIX + "=" + newInstancePrefix);
         if(!FabricLoader.getInstance().isDevelopmentEnvironment()) {
             commandLine.add(ProjectInception.MAIN_CLASS);
             List<String> cmdArgs = Arrays.asList(ProjectInception.ARGUMENTS);
@@ -119,7 +125,10 @@ public class GameInstance {
             commandLine.add("--disableMultiplayer");
         }
 
-        this.tailer = ProjectInception.outputQueue.createTailer("projectInceptionGameInstance").direction(TailerDirection.NONE);
+        this.childQueue = ProjectInceptionEarlyRiser.buildQueue(
+                new File(MinecraftClient.getInstance().runDirectory, "projectInception" + File.separator + newInstancePrefix)
+        );
+        this.tailer = this.childQueue.createTailer("projectInceptionGameInstance").direction(TailerDirection.NONE);
         this.tailerThread = new Thread(this::tailerThread);
     }
 
@@ -156,6 +165,10 @@ public class GameInstance {
                     isProcessBeingKilled = false;
                 }
             }
+
+            if(this.childQueue != null && !this.childQueue.isClosed()) {
+                this.childQueue.close();
+            }
         };
         if(async) {
             new Thread(stopFunc).start();
@@ -168,7 +181,7 @@ public class GameInstance {
         Thread.currentThread().setName("Game Instance Tailer " + instanceNumber);
         final AtomicBoolean isTextureUploading = new AtomicBoolean(false);
         final Object textureUploadLock = new Object();
-        final ExcerptAppender appender = this.tailer.queue().acquireAppender();
+        final ExcerptAppender appender = this.childQueue.acquireAppender();
         try {
             while (process != null && process.isAlive()) {
                 synchronized (send2ChildLock) {
@@ -278,7 +291,7 @@ public class GameInstance {
         }
     }
 
-    private void iSleep(long time) {
+    private static void iSleep(long time) {
         try {
             Thread.sleep(time);
         } catch (InterruptedException e) {
@@ -325,6 +338,15 @@ public class GameInstance {
         }
         synchronized (send2ChildLock) {
             this.messages2ChildToSend.add(message);
+        }
+    }
+
+    public static void stopAllGameInstances() {
+        synchronized (cleanUpLock) {
+            instancesToCleanUp.forEach(g -> {
+                g.stop(false);
+            });
+            instancesToCleanUp.clear();
         }
     }
 

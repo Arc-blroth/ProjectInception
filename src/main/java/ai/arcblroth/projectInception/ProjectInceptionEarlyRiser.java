@@ -24,13 +24,7 @@ public class ProjectInceptionEarlyRiser implements Runnable {
     public static final String ARG_IS_INNER;
     public static final String ARG_DISPLAY_WIDTH;
     public static final String ARG_DISPLAY_HEIGHT;
-
-    static {
-        final String className = ProjectInceptionEarlyRiser.class.getName();
-        ARG_IS_INNER = className + ".IS_INNER";
-        ARG_DISPLAY_WIDTH = className + ".DISPLAY_WIDTH";
-        ARG_DISPLAY_HEIGHT = className + ".DISPLAY_HEIGHT";
-    }
+    public static final String ARG_INSTANCE_PREFIX;
 
     public static final int DISPLAY_SCALE = 64;
 
@@ -39,9 +33,23 @@ public class ProjectInceptionEarlyRiser implements Runnable {
     public static final boolean USE_FAUX_INNER = false;
 
     public static final Logger LOGGER = LogManager.getLogger("ProjectInception");
-    public static final boolean IS_INNER = System.getProperty(ARG_IS_INNER) != null
-            && System.getProperty(ARG_IS_INNER).equals("true");
+    public static final boolean IS_INNER;
+    public static final String INSTANCE_PREFIX;
     public static String[] ARGUMENTS = new String[0];
+
+    static {
+        final String className = ProjectInceptionEarlyRiser.class.getName();
+        ARG_IS_INNER = className + ".IS_INNER";
+        ARG_DISPLAY_WIDTH = className + ".DISPLAY_WIDTH";
+        ARG_DISPLAY_HEIGHT = className + ".DISPLAY_HEIGHT";
+        ARG_INSTANCE_PREFIX = className + ".INSTANCE_PREFIX";
+
+        IS_INNER = System.getProperty(ARG_IS_INNER) != null
+                && System.getProperty(ARG_IS_INNER).equals("true");
+        INSTANCE_PREFIX = System.getProperty(ARG_INSTANCE_PREFIX) != null
+                ? System.getProperty(ARG_INSTANCE_PREFIX)
+                : "inst";
+    }
 
     @Override
     public void run() {
@@ -93,8 +101,12 @@ public class ProjectInceptionEarlyRiser implements Runnable {
         yeetChronicleQueues(queueDir, true);
         // Because we need to reuse this queue, we don't wrap this in a try
         // with resources. The queue is closed in MixinWindow#closeChronicleQueue.
-        LOGGER.log(Level.INFO, "Initializing queue...");
-        ProjectInception.outputQueue = ChronicleQueue
+        LOGGER.log(Level.INFO, "Initializing fromParentQueue...");
+        ProjectInception.toParentQueue = ProjectInceptionEarlyRiser.buildQueue(queueDir);
+    }
+
+    public static ChronicleQueue buildQueue(File queueDir) {
+        return ChronicleQueue
                 .singleBuilder(queueDir)
                 .rollCycle(RollCycles.MINUTELY)
                 .build();

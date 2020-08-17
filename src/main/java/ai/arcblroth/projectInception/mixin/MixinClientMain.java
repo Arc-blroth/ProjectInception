@@ -1,5 +1,6 @@
 package ai.arcblroth.projectInception.mixin;
 
+import ai.arcblroth.projectInception.CyberDragonsUtil;
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.QueueProtocol;
@@ -20,6 +21,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.io.File;
 import java.util.Arrays;
 import java.util.OptionalInt;
+import java.util.Random;
 
 @Mixin(Main.class)
 public class MixinClientMain {
@@ -40,22 +42,17 @@ public class MixinClientMain {
                 optionParser.allowsUnrecognizedOptions();
                 OptionSpec<File> gameDir = optionParser.accepts("gameDir").withRequiredArg().ofType(File.class).defaultsTo(new File("."));
                 OptionSet optionSet = optionParser.parse(args);
-                ProjectInceptionEarlyRiser.initChronicleQueues(new File(optionSet.valueOf(gameDir), "projectInception"));
+                ProjectInceptionEarlyRiser.initChronicleQueues(new File(optionSet.valueOf(gameDir), "projectInception" + File.separator + ProjectInceptionEarlyRiser.INSTANCE_PREFIX));
+                Random random = new Random();
+                final int color = CyberDragonsUtil.hsbToRgb(new double[] {random.nextDouble(), 0.8, 1});
                 while(true) {
-                    ProjectInception.outputQueue.acquireAppender().writeBytes(b -> {
+                    ProjectInception.toParentQueue.acquireAppender().writeBytes(b -> {
                         b.writeByte(QueueProtocol.MessageType.IMAGE.header);
                         b.writeInt(16);
                         b.writeInt(16);
                         b.writeBoolean(true);
-                        final byte red = (byte) 46,
-                                   blue = (byte) 171,
-                                   green = (byte) 255,
-                                   alpha = (byte) 255;
                         for (int i = 0; i < 16 * 16; i++) {
-                            b.writeByte(red);
-                            b.writeByte(blue);
-                            b.writeByte(green);
-                            b.writeByte(alpha);
+                            b.writeInt(color);
                         }
                     });
                     Thread.sleep(1000 / 60);

@@ -18,8 +18,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 import static ai.arcblroth.projectInception.QueueProtocol.*;
 
@@ -35,7 +33,7 @@ public class MixinMinecraftClient {
     private void prepareParent2ChildTailer(CallbackInfo ci) {
         if(ProjectInception.IS_INNER) {
             ProjectInception.LOGGER.log(Level.INFO, "Building tailer...");
-            projectInceptionTailer = ProjectInception.outputQueue.createTailer("parent2ChildQueueReader");
+            projectInceptionTailer = ProjectInception.toParentQueue.createTailer("parent2ChildQueueReader");
             projectInceptionTailer.direction(TailerDirection.FORWARD);
             inputEvents = new ArrayList<>();
         }
