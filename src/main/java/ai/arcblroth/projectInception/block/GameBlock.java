@@ -9,14 +9,12 @@ import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemPlacementContext;
 import net.minecraft.state.StateManager;
 import net.minecraft.state.property.DirectionProperty;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.BlockMirror;
-import net.minecraft.util.BlockRotation;
-import net.minecraft.util.Hand;
+import net.minecraft.util.*;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -49,32 +47,34 @@ public class GameBlock extends BlockWithEntity {
         BlockEntity be = world.getBlockEntity(pos);
         if(be instanceof GameBlockEntity) {
             GameBlockEntity ge = (GameBlockEntity) be;
-            if (hand.equals(Hand.MAIN_HAND)) {
-                if (!ge.isOn()) {
-                    if(player.getStackInHand(hand).isEmpty()) {
-                        GameMultiblock multiblock = GameMultiblock.getMultiblock(world, pos);
-                        if (multiblock != null) {
-                            multiblock.forEachBlockEntity((left, y, blockEntity) -> {
-                                blockEntity.turnOn(multiblock, left, y);
-                            });
-                            BlockEntity controller = world.getBlockEntity(multiblock.controllerPos);
-                            if (controller instanceof GameBlockEntity) {
-                                ((GameBlockEntity) controller).setController(true);
+            Direction dir = state.get(FACING);
+            if(hit.getSide().equals(dir.getOpposite())) {
+                if (hand.equals(Hand.MAIN_HAND)) {
+                    if (!ge.isOn()) {
+                        if (player.getStackInHand(hand).isEmpty()) {
+                            GameMultiblock multiblock = GameMultiblock.getMultiblock(world, pos);
+                            if (multiblock != null) {
+                                multiblock.forEachBlockEntity((left, y, blockEntity) -> {
+                                    blockEntity.turnOn(multiblock, left, y);
+                                });
+                                BlockEntity controller = world.getBlockEntity(multiblock.controllerPos);
+                                if (controller instanceof GameBlockEntity) {
+                                    ((GameBlockEntity) controller).setController(true);
+                                }
+                                return ActionResult.SUCCESS;
                             }
-                            return ActionResult.SUCCESS;
+                        } else if (world.isClient && !(player.getStackInHand(hand).getItem() instanceof BlockItem)) {
+                            MinecraftClient.getInstance().player.sendMessage(new TranslatableText("message.project_inception.empty_hand_warning"), true);
                         }
-                    }
-                } else {
-                    if(player.getStackInHand(hand).getItem() instanceof InceptionInterfaceItem) {
-                        if (world.isClient) {
-                            MinecraftClient.getInstance().openScreen(new InceptionInterfaceScreen(ge));
-                        }
-                        player.sendMessage(new TranslatableText("message.project_inception.escape"), true);
-                        return ActionResult.SUCCESS;
                     } else {
-                        if (world.isClient) {
-                            Direction dir = state.get(FACING);
-                            if (hit.getSide().equals(dir.getOpposite())) {
+                        if (player.getStackInHand(hand).getItem() instanceof InceptionInterfaceItem) {
+                            if (world.isClient) {
+                                MinecraftClient.getInstance().openScreen(new InceptionInterfaceScreen(ge));
+                            }
+                            player.sendMessage(new TranslatableText("message.project_inception.escape"), true);
+                            return ActionResult.SUCCESS;
+                        } else {
+                            if (world.isClient) {
                                 Direction left = GameMultiblock.getLeft(dir);
                                 Vec3d hitPoint = hit.getPos().subtract(pos.getX(), pos.getY(), pos.getZ());
                                 double hitX = (

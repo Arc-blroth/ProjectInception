@@ -6,6 +6,7 @@
   "client": [
     "MixinClientMain",
     "MixinHeldItemRenderer",
+    "MixinInGameHud",
     "MixinItemstack",
     "MixinKeyboard",
     "MixinMinecraftClient",

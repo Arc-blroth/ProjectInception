@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#E#",
+    "EIE",
+    "#E#"
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:crying_obsidian"
+    },
+    "E": {
+      "item": "minecraft:ender_chest"
+    },
+    "I": {
+      "item": "minecraft:end_crystal"
+    }
+  },
+  "result": {
+    "item": "project_inception:inception_block",
+    "count": 16
+  }
+}

@@ -157,4 +157,9 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
         vertexConsumer.vertex(matrix4f, maxX, minY, z).color(255, 255, 255, 255).texture(minU, minV).light(light).next();
     }
 
+    @Override
+    public boolean rendersOutsideBoundingBox(GameBlockEntity blockEntity) {
+        return true;
+    }
+
 }

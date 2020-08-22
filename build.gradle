@@ -16,6 +16,10 @@ repositories {
 		name "jitpack"
 		url "https://jitpack.io"
 	}
+	maven {
+		name "CottonMC"
+		url "http://server.bbkr.space:8081/artifactory/libs-release"
+	}
 }
 
 configurations {
@@ -33,6 +37,8 @@ dependencies {
 
 	modImplementation "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
 	nest "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
+	modImplementation "io.github.cottonmc.cotton:cotton-datapack:${project.cotton_datapack_version}"
+	nest "io.github.cottonmc.cotton:cotton-datapack:${project.cotton_datapack_version}"
 
 	implementation "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
 	shadow "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
@@ -41,13 +47,12 @@ dependencies {
 }
 
 processResources {
-	inputs.property "version", project.version
-
 	from(sourceSets.main.resources.srcDirs) {
 		include "fabric.mod.json"
 		expand ([
 			version: project.version,
-			mm_version: project.mm_version
+			mm_version: project.mm_version,
+			cotton_datapack_version: project.cotton_datapack_version
 		])
 	}
 
@@ -82,7 +87,9 @@ jar {
 }
 
 task removeStuffForShadowJar(type: Delete) {
-	delete configurations.nest.getFiles().collect { "${buildDir}/resources/main/" + it.getName() }
+	delete { // closure for lazy evaluation
+		configurations.nest.getFiles().collect { "${buildDir}/resources/main/" + it.getName() }
+	}
 }
 
 // Shadow Jar stuff based from Hephaestus-Dev

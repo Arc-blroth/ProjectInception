@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#E#",
+    "EIE",
+    "#E#"
+  ],
+  "key": {
+    "#": {
+      "item": "techreborn:hot_tungstensteel_ingot"
+    },
+    "E": {
+      "item": "minecraft:ender_chest"
+    },
+    "I": {
+      "item": "techreborn:uu_matter"
+    }
+  },
+  "result": {
+    "item": "project_inception:inception_block",
+    "count": 32
+  }
+}

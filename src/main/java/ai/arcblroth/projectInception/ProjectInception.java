@@ -5,8 +5,10 @@ import ai.arcblroth.projectInception.block.GameBlockEntity;
 import ai.arcblroth.projectInception.block.InceptionBlock;
 import ai.arcblroth.projectInception.item.BlockItemWithMagicness;
 import ai.arcblroth.projectInception.item.InceptionInterfaceItem;
+import io.github.cottonmc.cotton.datapack.recipe.RecipeUtil;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.Material;
@@ -50,7 +52,7 @@ public class ProjectInception implements ModInitializer {
 	@Override
 	public void onInitialize() {
     	LOGGER.log(Level.INFO, "Registering stuff...");
-		STUFF = FabricItemGroupBuilder.create(new Identifier(MODID, "stuff")).icon(() -> new ItemStack(INCEPTION_BLOCK_ITEM)).build();
+		STUFF = FabricItemGroupBuilder.create(new Identifier(MODID, "stuff")).icon(() -> new ItemStack(INCEPTION_INTERFACE_ITEM)).build();
 
 		INCEPTION_BLOCK = Registry.register(Registry.BLOCK, new Identifier(MODID, "inception_block"),
 				new InceptionBlock(AbstractBlock.Settings.of(Material.METAL).strength(2).emissiveLighting((s, v, w) -> true)));
@@ -64,6 +66,14 @@ public class ProjectInception implements ModInitializer {
 				new BlockItemWithMagicness(GAME_BLOCK, new Item.Settings().group(STUFF).rarity(Rarity.RARE), false, true));
 		INCEPTION_INTERFACE_ITEM = Registry.register(Registry.ITEM, new Identifier(MODID, "inception_interface"),
 				new InceptionInterfaceItem(new Item.Settings().group(STUFF).rarity(Rarity.RARE)));
+
+		if(FabricLoader.getInstance().isModLoaded("techreborn")) {
+			RecipeUtil.removeRecipe(new Identifier(MODID, "inception_block_vanilla"));
+			RecipeUtil.removeRecipe(new Identifier(MODID, "inception_interface_vanilla"));
+		} else {
+			RecipeUtil.removeRecipe(new Identifier(MODID, "inception_block_techreborn"));
+			RecipeUtil.removeRecipe(new Identifier(MODID, "inception_interface_techreborn"));
+		}
 	}
 
 }

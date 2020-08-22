@@ -5,6 +5,8 @@
   "item.project_inception.inception_interface": "Inception Interface",
 
   "message.project_inception.escape": "Press escape to exit.",
+  "message.project_inception.empty_hand_warning": "Click with an empty hand to activate.",
+  "message.project_inception.loading": "[Project Inception] Loading Minecraft, please wait...",
 
   "message.project_inception.splash1": "Project Inception!",
   "message.project_inception.splash2": "A dream within a dream...",

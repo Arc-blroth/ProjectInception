@@ -6,8 +6,12 @@ import net.fabricmc.fabric.api.block.entity.BlockEntityClientSerializable;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.predicate.entity.EntityPredicates;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Tickable;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.BlockPos;
 
 public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntityClientSerializable {
@@ -111,7 +115,16 @@ public class GameBlockEntity extends BlockEntity implements Tickable, BlockEntit
             gameInstance.start();
         }
         this.markDirty();
-        if(!world.isClient) this.sync();
+        if(!world.isClient) {
+            this.sync();
+            if(world instanceof ServerWorld) {
+                ((ServerWorld) world).getPlayers(EntityPredicates.maxDistance(
+                        multiblock.controllerPos.getX(), multiblock.controllerPos.getY(), multiblock.controllerPos.getZ(), 48
+                )).forEach(player -> {
+                    player.sendSystemMessage(new TranslatableText("message.project_inception.loading"), Util.NIL_UUID);
+                });
+            }
+        }
     }
 
     public boolean isController() {
