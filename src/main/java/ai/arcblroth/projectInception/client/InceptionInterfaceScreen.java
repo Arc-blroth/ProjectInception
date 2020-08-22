@@ -2,7 +2,9 @@ package ai.arcblroth.projectInception.client;
 
 import ai.arcblroth.projectInception.GameInstance;
 import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.block.GameBlockEntity;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.NarratorManager;
@@ -39,6 +41,15 @@ public class InceptionInterfaceScreen extends Screen {
     }
 
     @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if(InputUtil.fromKeyCode(keyCode, scanCode).equals(KeyBindingHelper.getBoundKeyOf(ProjectInceptionClient.EXIT_INNER_LOCK))) {
+            this.client.openScreen(null);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public void removed() {
         this.client.keyboard.setRepeatEvents(false);
         if(ProjectInception.focusedInstance == gameInstance) {
@@ -48,6 +59,11 @@ public class InceptionInterfaceScreen extends Screen {
 
     @Override
     public boolean isPauseScreen() {
+        return false;
+    }
+
+    @Override
+    public boolean shouldCloseOnEsc() {
         return false;
     }
 

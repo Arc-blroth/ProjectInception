@@ -4,7 +4,7 @@
   "block.project_inception.game_block": "Block of Minecraft",
   "item.project_inception.inception_interface": "Inception Interface",
 
-  "message.project_inception.escape": "Press escape to exit.",
+  "message.project_inception.escape": "Press %s to exit.",
   "message.project_inception.empty_hand_warning": "Click with an empty hand to activate.",
   "message.project_inception.loading": "[Project Inception] Loading Minecraft, please wait...",
 
@@ -15,5 +15,8 @@
   "message.project_inception.splash5": "Worlds in worlds!",
   "message.project_inception.splash6": "Multiplayer not enabled!",
   "message.project_inception.splash7": "Omniuniversal!",
-  "message.project_inception.splash8": "Warning: Continued usage of Project Inception may cause loss of sanity"
+  "message.project_inception.splash8": "Warning: continued usage of Project Inception may cause loss of sanity",
+
+  "key.categories.project_inception": "Project Inception",
+  "key.project_inception.exit_inner_lock": "Exit Inner Game Input Lock"
 }

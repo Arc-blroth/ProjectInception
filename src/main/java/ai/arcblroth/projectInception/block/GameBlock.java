@@ -1,5 +1,6 @@
 package ai.arcblroth.projectInception.block;
 
+import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.client.InceptionInterfaceScreen;
 import ai.arcblroth.projectInception.item.InceptionInterfaceItem;
 import net.minecraft.block.Block;
@@ -70,8 +71,8 @@ public class GameBlock extends BlockWithEntity {
                         if (player.getStackInHand(hand).getItem() instanceof InceptionInterfaceItem) {
                             if (world.isClient) {
                                 MinecraftClient.getInstance().openScreen(new InceptionInterfaceScreen(ge));
+                                player.sendMessage(new TranslatableText("message.project_inception.escape", ProjectInceptionClient.EXIT_INNER_LOCK.getBoundKeyLocalizedText()), true);
                             }
-                            player.sendMessage(new TranslatableText("message.project_inception.escape"), true);
                             return ActionResult.SUCCESS;
                         } else {
                             if (world.isClient) {
