@@ -7,13 +7,10 @@ _What if you could play Minecraft inside of Minecraft?_
 This is the source code for Project Inception, a 1.16 Fabric
 mod that allows you to play Minecraft - inside of Minecraft.
 
-Note that as of right now 
-**EVERYTHING IS EXTREMELY WORK-IN-PROGRESS**.
+As of right now, things are mostly stable. However,
 Arc'blroth does not make any guarantees that this mod will
-work on your computer, and guarantees that the mod will probably
-softlock your computer if you have too many Chrome tabs open.
-You are solely responsible for any crashes/damages to your 
-computer or sanity that this mod may cause.
+work on your computer. You are solely responsible for any
+crashes/damages to your computer or sanity that this mod may cause.
 
 All issues should be reported here using Github Issues.
 **Please check the [below FAQ](#Known-Issues--FAQ) before 
@@ -48,5 +45,6 @@ sanity, feel free to submit pull requests :).
   A: Well, I did warn you that it could crash. Try
      opening your modpack folder and  deleting the 
      `projectInception` folder inside of it. You
-     may have to do this from CMD if Windows Explorer
-     crashes.
+     may have to do this from a Command Prompt or Terminal.
+     To the best of my knowledge this issue should have already
+     been fixed, however.
