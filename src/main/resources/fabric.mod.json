@@ -34,6 +34,9 @@
   "jars": [
     {
       "file": "Fabric-ASM-${mm_version}.jar"
+    },
+    {
+      "file": "cotton-${cotton_version}.jar"
     }
   ],
 

@@ -37,13 +37,20 @@ dependencies {
 
 	modImplementation "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
 	nest "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
-	modImplementation "io.github.cottonmc.cotton:cotton-datapack:${project.cotton_datapack_version}"
-	nest "io.github.cottonmc.cotton:cotton-datapack:${project.cotton_datapack_version}"
+	modImplementation "io.github.cottonmc.cotton:cotton:${project.cotton_version}"
+	nest "io.github.cottonmc.cotton:cotton:${project.cotton_version}"
 
 	implementation "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
 	shadow "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
 	implementation "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
 	shadow "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
+}
+
+def getActualShadowedJars = {
+	def specifiedDependencies = configurations.nest.dependencies.collect { it.name + "-" + it.version + ".jar" }
+	def result = configurations.nest.resolve()
+	result.removeIf { !specifiedDependencies.contains(it.name) }
+	result
 }
 
 processResources {
@@ -52,7 +59,7 @@ processResources {
 		expand ([
 			version: project.version,
 			mm_version: project.mm_version,
-			cotton_datapack_version: project.cotton_datapack_version
+			cotton_version: project.cotton_version
 		])
 	}
 
@@ -60,7 +67,8 @@ processResources {
 		exclude "fabric.mod.json"
 	}
 
-	from configurations.nest
+	from getActualShadowedJars
+
 }
 
 minecraft {
@@ -88,7 +96,7 @@ jar {
 
 task removeStuffForShadowJar(type: Delete) {
 	delete { // closure for lazy evaluation
-		configurations.nest.getFiles().collect { "${buildDir}/resources/main/" + it.getName() }
+		getActualShadowedJars.collect { "${buildDir}/resources/main/" + it.getName() }
 	}
 }
 
@@ -109,7 +117,7 @@ shadowJar {
 remapJar {
 	dependsOn shadowJar
 	input.set shadowJar.archiveFile.get()
-	from configurations.nest
+	from getActualShadowedJars
 }
 
 // configure the maven publication
