@@ -159,7 +159,7 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
 
     @Override
     public boolean rendersOutsideBoundingBox(GameBlockEntity blockEntity) {
-        return true;
+        return blockEntity.isController();
     }
 
 }

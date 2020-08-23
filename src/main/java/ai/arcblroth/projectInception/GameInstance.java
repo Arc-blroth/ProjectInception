@@ -196,7 +196,7 @@ public class GameInstance {
                         isTextureUploading.set(true);
                         RenderSystem.recordRenderCall(() -> {
                             synchronized (textureUploadLock) {
-                                NativeImage image = new NativeImage(NativeImage.Format.ABGR, lastWidth, lastHeight, true, memAddress(this.texture));
+                                NativeImage image = new NativeImage(NativeImage.Format.ABGR, lastWidth, lastHeight, false, memAddress(this.texture));
                                 this.lastTextureImage = new NativeImageBackedTexture(image);
                                 this.textureId = MinecraftClient.getInstance().getTextureManager().registerDynamicTexture("project_inception_game", lastTextureImage);
                                 isTextureUploading.set(false);
@@ -227,12 +227,13 @@ public class GameInstance {
                     synchronized (textureUploadLock) {
                         textureUploadLock.wait();
                     }
-                }
-                int framerateLimit = MinecraftClient.getInstance().getWindow().getFramerateLimit();
-                if(framerateLimit != 0) {
-                    iSleep(1000 / framerateLimit);
                 } else {
-                    iSleep(1);
+                    int framerateLimit = MinecraftClient.getInstance().getWindow().getFramerateLimit();
+                    if (framerateLimit != 0) {
+                        iSleep(1000 / framerateLimit);
+                    } else {
+                        iSleep(1);
+                    }
                 }
             }
         } catch (InterruptedException ignored) {
