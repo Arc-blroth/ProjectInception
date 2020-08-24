@@ -96,7 +96,7 @@ jar {
 
 task removeStuffForShadowJar(type: Delete) {
 	delete { // closure for lazy evaluation
-		getActualShadowedJars.collect { "${buildDir}/resources/main/" + it.getName() }
+		configurations.nest.collect { "${buildDir}/resources/main/" + it.getName() }
 	}
 }
 
