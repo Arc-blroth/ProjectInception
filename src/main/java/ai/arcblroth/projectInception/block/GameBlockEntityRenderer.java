@@ -130,7 +130,7 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
                     0.0F, 1.0F,
                     0.0F, 1.0F,
                     light);
-            if(blockEntity.getGameInstance().shouldShowCursor()) {
+            if(ProjectInception.focusedInstance == blockEntity.getGameInstance() && blockEntity.getGameInstance().shouldShowCursor()) {
                 VertexConsumer ptVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getText(pointerSprite.getAtlas().getId()));
                 float left = 1F - (float) blockEntity.getGameInstance().getLastMouseX();
                 float top = 1F - (float) blockEntity.getGameInstance().getLastMouseY();

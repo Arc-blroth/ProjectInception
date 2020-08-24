@@ -6,6 +6,8 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.util.Window;
 import net.minecraft.util.Identifier;
 import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.queue.ChronicleQueue;
@@ -190,6 +192,7 @@ public class GameInstance {
                         messages2ChildToSend.clear();
                     }
                 }
+                boolean previousShowCursor = showCursor;
                 this.texture = getLastTexture();
                 if (this.textureId == null) {
                     if (this.texture != null) {
@@ -214,6 +217,11 @@ public class GameInstance {
                                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                                     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
                                     this.lastTextureImage.upload();
+                                    if(!previousShowCursor && showCursor) {
+                                        clampCursor();
+                                        Window w = MinecraftClient.getInstance().getWindow();
+                                        glfwSetCursorPos(w.getHandle(), lastMouseX * w.getWidth(), lastMouseY * w.getHeight());
+                                    }
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -239,9 +247,7 @@ public class GameInstance {
         } catch (InterruptedException ignored) {
 
         } finally {
-            System.out.println("closing texture 1");
             RenderSystem.recordRenderCall(() -> {
-                System.out.println("closing texture 2");
                 if(this.lastTextureImage != null) {
                     // this segfaults Minecraft and I don't know why
                     // this.lastTextureImage.close();
@@ -320,6 +326,15 @@ public class GameInstance {
         sendParent2ChildMessage(message2);
         message2.message = GLFW_RELEASE;
         sendParent2ChildMessage(message2);
+    }
+
+    public void clampCursor() {
+        MouseSetPosMessage mpMessage = new MouseSetPosMessage();
+        mpMessage.x = Math.min(Math.max(lastMouseX, 0), 1);
+        mpMessage.y = Math.min(Math.max(lastMouseY, 0), 1);
+        lastMouseX = mpMessage.x;
+        lastMouseY = mpMessage.y;
+        sendParent2ChildMessage(mpMessage);
     }
 
     public void sendParent2ChildMessage(Message message) {
