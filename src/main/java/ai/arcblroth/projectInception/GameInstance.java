@@ -239,9 +239,12 @@ public class GameInstance {
         } catch (InterruptedException ignored) {
 
         } finally {
+            System.out.println("closing texture 1");
             RenderSystem.recordRenderCall(() -> {
+                System.out.println("closing texture 2");
                 if(this.lastTextureImage != null) {
-                    this.lastTextureImage.close();
+                    // this segfaults Minecraft and I don't know why
+                    // this.lastTextureImage.close();
                     this.lastTextureImage = null;
                 }
                 this.texture = null;
