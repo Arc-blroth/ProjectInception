@@ -12,6 +12,7 @@
     "MixinMinecraftClient",
     "MixinMinecraftServer",
     "MixinMouse",
+    "MixinRecipeManager",
     "MixinRenderSystem",
     "MixinSplashTextResourceSupplier"
   ],

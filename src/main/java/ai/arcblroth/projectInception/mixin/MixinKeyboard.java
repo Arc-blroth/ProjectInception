@@ -1,7 +1,7 @@
 package ai.arcblroth.projectInception.mixin;
 
 import ai.arcblroth.projectInception.ProjectInception;
-import ai.arcblroth.projectInception.QueueProtocol;
+import ai.arcblroth.projectInception.mc.QueueProtocol;
 import ai.arcblroth.projectInception.duck.IAmAKeyboard;
 import net.minecraft.client.Keyboard;
 import net.minecraft.client.MinecraftClient;
@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 
-import static ai.arcblroth.projectInception.QueueProtocol.*;
+import static ai.arcblroth.projectInception.mc.QueueProtocol.*;
 
 @Mixin(Keyboard.class)
 public class MixinKeyboard implements IAmAKeyboard {

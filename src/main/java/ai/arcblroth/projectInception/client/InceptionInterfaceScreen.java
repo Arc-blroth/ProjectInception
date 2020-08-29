@@ -1,6 +1,6 @@
 package ai.arcblroth.projectInception.client;
 
-import ai.arcblroth.projectInception.GameInstance;
+import ai.arcblroth.projectInception.mc.GameInstance;
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.block.GameBlockEntity;

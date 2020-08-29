@@ -1,9 +1,9 @@
 package ai.arcblroth.projectInception.mixin;
 
-import ai.arcblroth.projectInception.CyberDragonsUtil;
+import ai.arcblroth.projectInception.util.CyberDragonsUtil;
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
-import ai.arcblroth.projectInception.QueueProtocol;
+import ai.arcblroth.projectInception.mc.QueueProtocol;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
 import joptsimple.OptionParser;

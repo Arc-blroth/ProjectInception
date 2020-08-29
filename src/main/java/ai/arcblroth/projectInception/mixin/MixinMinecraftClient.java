@@ -19,7 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 
-import static ai.arcblroth.projectInception.QueueProtocol.*;
+import static ai.arcblroth.projectInception.mc.QueueProtocol.*;
 
 @Mixin(MinecraftClient.class)
 public class MixinMinecraftClient {

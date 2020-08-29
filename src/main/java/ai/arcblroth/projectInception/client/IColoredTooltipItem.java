@@ -1,6 +1,6 @@
 package ai.arcblroth.projectInception.client;
 
-import ai.arcblroth.projectInception.CyberDragonsUtil;
+import ai.arcblroth.projectInception.util.CyberDragonsUtil;
 import net.minecraft.text.TextColor;
 
 public interface IColoredTooltipItem {

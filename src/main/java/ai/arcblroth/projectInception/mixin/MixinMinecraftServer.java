@@ -1,6 +1,6 @@
 package ai.arcblroth.projectInception.mixin;
 
-import ai.arcblroth.projectInception.GameInstance;
+import ai.arcblroth.projectInception.mc.GameInstance;
 import ai.arcblroth.projectInception.ProjectInception;
 import net.minecraft.server.MinecraftServer;
 import org.apache.logging.log4j.Level;

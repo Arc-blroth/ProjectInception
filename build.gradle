@@ -15,10 +15,9 @@ repositories {
 	maven {
 		name "jitpack"
 		url "https://jitpack.io"
-	}
-	maven {
-		name "CottonMC"
-		url "http://server.bbkr.space:8081/artifactory/libs-release"
+		content {
+			includeGroupByRegex "com\\.github\\..*"
+		}
 	}
 }
 
@@ -37,8 +36,6 @@ dependencies {
 
 	modImplementation "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
 	nest "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
-	modImplementation "io.github.cottonmc.cotton:cotton:${project.cotton_version}"
-	nest "io.github.cottonmc.cotton:cotton:${project.cotton_version}"
 
 	implementation "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
 	shadow "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
@@ -57,9 +54,7 @@ processResources {
 	from(sourceSets.main.resources.srcDirs) {
 		include "fabric.mod.json"
 		expand ([
-			version: project.version,
-			mm_version: project.mm_version,
-			cotton_version: project.cotton_version
+			version: project.version
 		])
 	}
 
@@ -67,7 +62,9 @@ processResources {
 		exclude "fabric.mod.json"
 	}
 
-	from getActualShadowedJars
+	from(getActualShadowedJars) {
+		into "META-INF/jars/"
+	}
 
 }
 
@@ -96,7 +93,7 @@ jar {
 
 task removeStuffForShadowJar(type: Delete) {
 	delete { // closure for lazy evaluation
-		configurations.nest.collect { "${buildDir}/resources/main/" + it.getName() }
+		configurations.nest.collect { "${buildDir}/resources/main/META-INF/jars/" + it.getName() }
 	}
 }
 
@@ -117,7 +114,10 @@ shadowJar {
 remapJar {
 	dependsOn shadowJar
 	input.set shadowJar.archiveFile.get()
-	from getActualShadowedJars
+
+	from(getActualShadowedJars) {
+		into "META-INF/jars/"
+	}
 }
 
 // configure the maven publication

@@ -5,7 +5,8 @@ import ai.arcblroth.projectInception.block.GameBlockEntity;
 import ai.arcblroth.projectInception.block.InceptionBlock;
 import ai.arcblroth.projectInception.item.BlockItemWithMagicness;
 import ai.arcblroth.projectInception.item.InceptionInterfaceItem;
-import io.github.cottonmc.cotton.datapack.recipe.RecipeUtil;
+import ai.arcblroth.projectInception.mc.GameInstance;
+import ai.arcblroth.projectInception.util.RecipeYeeter;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
 import net.fabricmc.loader.api.FabricLoader;
@@ -13,7 +14,6 @@ import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.HorizontalFacingBlock;
 import net.minecraft.block.Material;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroup;
 import net.minecraft.item.ItemStack;
@@ -21,12 +21,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.registry.Registry;
 import net.openhft.chronicle.queue.ChronicleQueue;
-import net.openhft.chronicle.queue.RollCycles;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
-
-import java.io.File;
-import java.util.LinkedList;
 
 public class ProjectInception implements ModInitializer {
 
@@ -68,11 +64,11 @@ public class ProjectInception implements ModInitializer {
 				new InceptionInterfaceItem(new Item.Settings().group(STUFF).rarity(Rarity.RARE)));
 
 		if(FabricLoader.getInstance().isModLoaded("techreborn")) {
-			RecipeUtil.removeRecipe(new Identifier(MODID, "inception_block_vanilla"));
-			RecipeUtil.removeRecipe(new Identifier(MODID, "inception_interface_vanilla"));
+			RecipeYeeter.yeetRecipe(new Identifier(MODID, "inception_block_vanilla"));
+			RecipeYeeter.yeetRecipe(new Identifier(MODID, "inception_interface_vanilla"));
 		} else {
-			RecipeUtil.removeRecipe(new Identifier(MODID, "inception_block_techreborn"));
-			RecipeUtil.removeRecipe(new Identifier(MODID, "inception_interface_techreborn"));
+			RecipeYeeter.yeetRecipe(new Identifier(MODID, "inception_block_techreborn"));
+			RecipeYeeter.yeetRecipe(new Identifier(MODID, "inception_interface_techreborn"));
 		}
 	}
 

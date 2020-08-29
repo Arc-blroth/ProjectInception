@@ -1,12 +1,14 @@
-package ai.arcblroth.projectInception;
+package ai.arcblroth.projectInception.mc;
 
+import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
+import ai.arcblroth.projectInception.block.GameBlockEntity;
 import ai.arcblroth.projectInception.block.GameMultiblock;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.Window;
 import net.minecraft.util.Identifier;
 import net.openhft.chronicle.bytes.Bytes;
@@ -28,7 +30,7 @@ import java.util.List;
 import java.util.OptionalLong;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static ai.arcblroth.projectInception.QueueProtocol.*;
+import static ai.arcblroth.projectInception.mc.QueueProtocol.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.memAddress;
@@ -40,7 +42,7 @@ public class GameInstance {
     private static final ArrayList<GameInstance> instancesToCleanUp = new ArrayList<>();
     private final int instanceNumber;
 
-    private final GameMultiblock multiblock;
+    private final GameMultiblock<GameBlockEntity> multiblock;
 
     private Process process;
     private final Object processLock = new Object();
@@ -79,7 +81,7 @@ public class GameInstance {
         }));
     }
 
-    public GameInstance(GameMultiblock multiblock) {
+    public GameInstance(GameMultiblock<GameBlockEntity> multiblock) {
         instanceNumber = instanceCounter;
         instanceCounter++;
         synchronized (cleanUpLock) {

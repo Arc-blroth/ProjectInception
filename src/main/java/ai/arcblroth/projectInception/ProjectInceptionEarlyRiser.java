@@ -30,7 +30,7 @@ public class ProjectInceptionEarlyRiser implements Runnable {
 
     // This make the child process not actually init Minecraft
     // so that I can test things without destroying my computer
-    public static final boolean USE_FAUX_INNER = false;
+    public static final boolean USE_FAUX_INNER = true;
 
     public static final Logger LOGGER = LogManager.getLogger("ProjectInception");
     public static final boolean IS_INNER;

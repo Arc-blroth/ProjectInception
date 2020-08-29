@@ -1,4 +1,4 @@
-package ai.arcblroth.projectInception;
+package ai.arcblroth.projectInception.mc;
 
 import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.queue.ExcerptAppender;

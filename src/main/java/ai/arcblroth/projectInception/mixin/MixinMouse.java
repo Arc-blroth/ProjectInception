@@ -16,7 +16,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 
-import static ai.arcblroth.projectInception.QueueProtocol.*;
+import static ai.arcblroth.projectInception.mc.QueueProtocol.*;
 
 @Mixin(Mouse.class)
 public abstract class MixinMouse implements IPreventMouseFromStackOverflow {

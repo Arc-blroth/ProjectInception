@@ -1,4 +1,4 @@
-package ai.arcblroth.projectInception;
+package ai.arcblroth.projectInception.util;
 
 // Class shamelessly stolen from myself at Arc-blroth/CyberneticDragons
 public class CyberDragonsUtil {

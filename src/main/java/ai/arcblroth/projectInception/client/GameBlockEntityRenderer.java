@@ -1,6 +1,8 @@
-package ai.arcblroth.projectInception.block;
+package ai.arcblroth.projectInception.client;
 
 import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.block.GameBlock;
+import ai.arcblroth.projectInception.block.GameBlockEntity;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
@@ -32,7 +34,6 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
 
     private static final SpriteIdentifier LOADING = new SpriteIdentifier(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE, new Identifier(ProjectInception.MODID, "block/inception"));
     private static final SpriteIdentifier GENERIC = new SpriteIdentifier(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE, new Identifier(ProjectInception.MODID, "block/generic"));
-    private static final Identifier POINTER = new Identifier(ProjectInception.MODID, "item/inception_interface");
     private final Sprite pointerSprite;
 
     public GameBlockEntityRenderer(BlockEntityRenderDispatcher dispatcher) {

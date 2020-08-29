@@ -1,16 +1,11 @@
 package ai.arcblroth.projectInception;
 
+import ai.arcblroth.projectInception.mc.QueueProtocol;
 import net.openhft.chronicle.bytes.Bytes;
-import net.openhft.chronicle.core.UnsafeMemory;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.RollCycles;
 import net.openhft.chronicle.wire.DocumentContext;
-import org.lwjgl.BufferUtils;
-
-import java.nio.ByteBuffer;
-
-import static org.lwjgl.system.MemoryUtil.memAddress;
 
 class Scratch {
     public static void main(String[] args) {
