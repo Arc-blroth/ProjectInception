@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Level;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
@@ -23,12 +24,12 @@ public abstract class MixinMouse implements IPreventMouseFromStackOverflow {
 
     @Shadow @Final private MinecraftClient client;
     @Shadow private boolean hasResolutionChanged;
-    private boolean projectInceptionPreventStackOverflowPlease = false;
+    @Unique private boolean projectInceptionPreventStackOverflowPlease = false;
 
-    private final MouseButtonMessage projectInceptionMbMessage = new MouseButtonMessage();
-    private final MouseScrollMessage projectInceptionMsMessage = new MouseScrollMessage();
-    private final MouseMoveMessage projectInceptionMmMessage = new MouseMoveMessage();
-    private final MouseSetPosMessage projectInceptionMpMessage = new MouseSetPosMessage();
+    @Unique private final MouseButtonMessage projectInceptionMbMessage = new MouseButtonMessage();
+    @Unique private final MouseScrollMessage projectInceptionMsMessage = new MouseScrollMessage();
+    @Unique private final MouseMoveMessage projectInceptionMmMessage = new MouseMoveMessage();
+    @Unique private final MouseSetPosMessage projectInceptionMpMessage = new MouseSetPosMessage();
 
     @Override
     public void projectInceptionUpdateMouseEvents(List<Message> events) {

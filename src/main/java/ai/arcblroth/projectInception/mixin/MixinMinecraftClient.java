@@ -13,6 +13,7 @@ import net.openhft.chronicle.wire.DocumentContext;
 import org.apache.logging.log4j.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -26,8 +27,8 @@ public class MixinMinecraftClient {
 
     @Shadow public Mouse mouse;
     @Shadow public Keyboard keyboard;
-    private ExcerptTailer projectInceptionTailer;
-    private ArrayList<Message> inputEvents;
+    @Unique private ExcerptTailer projectInceptionTailer;
+    @Unique private ArrayList<Message> inputEvents;
 
     @Inject(method = "run", at = @At("HEAD"))
     private void prepareParent2ChildTailer(CallbackInfo ci) {

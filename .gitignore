@@ -25,3 +25,7 @@ bin/
 run/**
 test/**
 logs/**
+
+# taterwebz
+
+taterwebz/**

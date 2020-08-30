@@ -9,6 +9,7 @@ import net.minecraft.client.util.Window;
 import net.openhft.chronicle.core.UnsafeMemory;
 import org.lwjgl.BufferUtils;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -22,7 +23,7 @@ import static org.lwjgl.system.MemoryUtil.memAddress;
 @Mixin(RenderSystem.class)
 public class MixinRenderSystem {
 
-    private static ByteBuffer projectInceptionOutput;
+    @Unique private static ByteBuffer projectInceptionOutput;
 
     @Inject(method = "initRenderer", at = @At("RETURN"))
     private static void initChronicleQueue(CallbackInfo ci) {

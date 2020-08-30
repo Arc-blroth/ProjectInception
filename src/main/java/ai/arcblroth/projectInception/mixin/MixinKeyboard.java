@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Level;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -22,8 +23,8 @@ import static ai.arcblroth.projectInception.mc.QueueProtocol.*;
 public class MixinKeyboard implements IAmAKeyboard {
 
     @Shadow @Final private MinecraftClient client;
-    private final KeyboardKeyMessage projectInceptionKeMessage = new KeyboardKeyMessage();
-    private final KeyboardCharMessage projectInceptionKcMessage = new KeyboardCharMessage();
+    @Unique private final KeyboardKeyMessage projectInceptionKeMessage = new KeyboardKeyMessage();
+    @Unique private final KeyboardCharMessage projectInceptionKcMessage = new KeyboardCharMessage();
 
     @Override
     public void projectInceptionUpdateKeyboardEvents(List<QueueProtocol.Message> events) {

@@ -26,6 +26,9 @@
 	],
     "client": [
       "ai.arcblroth.projectInception.ProjectInceptionClient"
+    ],
+    "project_inception:postLaunch": [
+      "ai.arcblroth.projectInception.taterwebz.CEFDownloader"
     ]
   },
 

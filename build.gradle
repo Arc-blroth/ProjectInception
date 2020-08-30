@@ -36,6 +36,12 @@ dependencies {
 
 	modImplementation "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
 	nest "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
+	modImplementation("com.github.A5b84:dark-loading-screen:v1.4.4") {
+		exclude group: "net.fabricmc.fabric-api"
+	}
+	modRuntime("com.github.A5b84:dark-loading-screen:v1.4.4") {
+		exclude group: "net.fabricmc.fabric-api"
+	}
 
 	implementation "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
 	shadow "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
