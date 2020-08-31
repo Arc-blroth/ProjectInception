@@ -74,8 +74,8 @@ public class MixinSplashScreen {
         }
     }
 
-    @Redirect(method = "render", at = @At(value = "INVOKE", target = "net/minecraft/client/MinecraftClient.setOverlay(Lnet/minecraft/client/gui/screen/Overlay;)V"))
-    private void onRemoveOverlay(MinecraftClient client, Overlay overlay) {
+    @Inject(method = "render", at = @At(value = "INVOKE", target = "net/minecraft/client/MinecraftClient.setOverlay(Lnet/minecraft/client/gui/screen/Overlay;)V"))
+    private void onRemoveOverlay(CallbackInfo ci) {
         projectInceptionShouldRenderBar = false;
     }
 
@@ -90,17 +90,17 @@ public class MixinSplashScreen {
             } else {
                 projectInceptionShouldRenderBar = true;
                 if (projectInceptionCurrentEntrypoint == -1 || (projectInceptionCurrentEntrypoint < projectInceptionEntrypoints.size() && projectInceptionCurrentEntrypointFuture.isDone())) {
-                    projectInceptionProgress = 0;
                     projectInceptionCurrentBar = new ProgressBar((SplashScreen) (Object) this);
                     projectInceptionCurrentEntrypoint++;
                     if (projectInceptionCurrentEntrypoint < projectInceptionEntrypoints.size()) {
+                        projectInceptionProgress = 0;
                         projectInceptionCurrentEntrypointFuture = projectInceptionThreadPool.submit(() ->
                                 projectInceptionEntrypoints.get(projectInceptionCurrentEntrypoint).onPostLaunch(projectInceptionCurrentBar)
                         );
                     }
                 }
                 if (projectInceptionCurrentBar != null) {
-                    float actualProgress = projectInceptionCurrentBar.getProgress();
+                    float actualProgress = !projectInceptionIsDone ? projectInceptionCurrentBar.getProgress() : 1;
                     projectInceptionProgress = MathHelper.clamp(projectInceptionProgress * 0.95F + actualProgress * 0.05F, 0.0F, 1.0F);
                 }
             }
