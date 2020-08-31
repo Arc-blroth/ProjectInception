@@ -1,15 +1,19 @@
 package ai.arcblroth.projectInception;
 
 import ai.arcblroth.projectInception.client.GameBlockEntityRenderer;
+import ai.arcblroth.projectInception.taterwebz.TaterwebzPandomium;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendereregistry.v1.BlockEntityRendererRegistry;
 import net.minecraft.client.options.KeyBinding;
 import org.lwjgl.glfw.GLFW;
+import org.panda_lang.pandomium.wrapper.PandomiumClient;
 
 public class ProjectInceptionClient implements ClientModInitializer {
 
     public static KeyBinding EXIT_INNER_LOCK;
+    public static TaterwebzPandomium PANDOMIUM;
+    public static PandomiumClient PANDOMIUM_CLIENT;
 
     @Override
     public void onInitializeClient() {

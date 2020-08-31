@@ -20,10 +20,6 @@ public class ProgressBar {
         this.progress = progress;
     }
 
-    public void setProgress(double progress) {
-        setProgress((float) progress);
-    }
-
     public void setText(String text) {
         this.text = text;
     }

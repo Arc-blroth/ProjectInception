@@ -99,10 +99,10 @@ public class MixinSplashScreen {
                         );
                     }
                 }
-                if (projectInceptionCurrentBar != null) {
-                    float actualProgress = !projectInceptionIsDone ? projectInceptionCurrentBar.getProgress() : 1;
-                    projectInceptionProgress = MathHelper.clamp(projectInceptionProgress * 0.95F + actualProgress * 0.05F, 0.0F, 1.0F);
-                }
+            }
+            if (projectInceptionCurrentBar != null) {
+                float actualProgress = !projectInceptionIsDone ? projectInceptionCurrentBar.getProgress() : 1;
+                projectInceptionProgress = MathHelper.clamp(projectInceptionProgress * 0.95F + actualProgress * 0.05F, 0.0F, 1.0F);
             }
         }
     }

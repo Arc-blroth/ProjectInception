@@ -19,6 +19,10 @@ repositories {
 			includeGroupByRegex "com\\.github\\..*"
 		}
 	}
+	maven {
+		name "Panda Repository"
+		url "https://repo.panda-lang.org"
+	}
 }
 
 configurations {
@@ -49,8 +53,19 @@ dependencies {
 	shadow "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
 	implementation "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
 	shadow "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
-	implementation "org.apache.commons:commons-compress:{$project.commons_compress_version}"
-	shadow "org.apache.commons:commons-compress:{$project.commons_compress_version}"
+	implementation("org.panda-lang:pandomium:${project.pandomium_version}") {
+		exclude group: "org.slf4j"
+		exclude module: "panda"
+		exclude module: "panda-framework"
+		exclude module: "panda-utilities"
+	}
+	shadow("org.panda-lang:pandomium:${project.pandomium_version}") {
+		exclude group: "org.slf4j"
+		exclude group: "org.panda-lang.pandomium-natives"
+		exclude module: "panda"
+		exclude module: "panda-framework"
+		exclude module: "panda-utilities"
+	}
 }
 
 def getActualShadowedJars = {
@@ -119,26 +134,31 @@ shadowJar {
 	exclude 'java/**'
 	exclude 'org/intellij/**'
 	exclude 'org/jetbrains/**'
-
-	relocate "org.apache.commons.compress", "ai.arcblroth.projectInception.shadow.org.apache.commons.compress"
 }
 
 remapJar {
 	dependsOn shadowJar
 	input.set shadowJar.archiveFile.get()
+	archiveClassifier.set('remap')
+}
 
+task reshadowJar(type: Jar) {
+	dependsOn remapJar
+	from zipTree(remapJar.archiveFile.get())
 	from(getActualShadowedJars) {
 		into "META-INF/jars/"
 	}
 }
+
+assemble.dependsOn reshadowJar
 
 // configure the maven publication
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
 			// add all the jars that should be included when publishing to maven
-			artifact(remapJar) {
-				builtBy remapJar
+			artifact(reshadowJar) {
+				builtBy reshadowJar
 			}
 			//artifact(sourcesJar) {
 			//	builtBy remapSourcesJar
