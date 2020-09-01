@@ -13,6 +13,7 @@ import java.nio.ByteBuffer;
 
 public class ProjectInceptionBrowser extends CefBrowser_N implements CefRenderHandler {
 
+    private static final Component FAUX_SOURCE = new Canvas();
     private ProjectInceptionCefRenderer renderer;
     private Framebuffer framebuffer;
     private final Rectangle browserRect = new Rectangle(0, 0, 1, 1); // Work around CEF issue #1437.
@@ -111,7 +112,7 @@ public class ProjectInceptionBrowser extends CefBrowser_N implements CefRenderHa
 
     public void click(double hitX, double hitY) {
         MouseEvent mouseEvent = new MouseEvent(
-                null,
+                FAUX_SOURCE,
                 MouseEvent.MOUSE_CLICKED,
                 System.currentTimeMillis(),
                 0,

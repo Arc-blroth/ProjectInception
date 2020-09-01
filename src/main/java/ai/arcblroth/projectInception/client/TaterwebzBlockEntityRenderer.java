@@ -1,0 +1,116 @@
+package ai.arcblroth.projectInception.client;
+
+import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.block.GameBlock;
+import ai.arcblroth.projectInception.block.GameBlockEntity;
+import ai.arcblroth.projectInception.block.TaterwebzBlockEntity;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.api.Environment;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.*;
+import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
+import net.minecraft.client.render.block.entity.BlockEntityRenderer;
+import net.minecraft.client.texture.Sprite;
+import net.minecraft.client.util.SpriteIdentifier;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.screen.PlayerScreenHandler;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Matrix4f;
+import net.minecraft.world.World;
+
+import java.util.Random;
+
+@Environment(EnvType.CLIENT)
+public class TaterwebzBlockEntityRenderer extends BlockEntityRenderer<TaterwebzBlockEntity> {
+
+    private static final SpriteIdentifier GENERIC = new SpriteIdentifier(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE, new Identifier(ProjectInception.MODID, "block/generic"));
+    private final Sprite pointerSprite;
+
+    public TaterwebzBlockEntityRenderer(BlockEntityRenderDispatcher dispatcher) {
+        super(dispatcher);
+        this.pointerSprite = MinecraftClient.getInstance().getItemRenderer().getModels().getSprite(ProjectInception.INCEPTION_INTERFACE_ITEM);
+    }
+
+    @Override
+    public void render(TaterwebzBlockEntity blockEntity, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light, int overlay) {
+        World world = blockEntity.getWorld();
+        BlockPos pos = blockEntity.getPos();
+        BlockState state = world.getBlockState(pos);
+
+        matrixStack.push();
+        RenderLayer renderLayer = RenderLayers.getBlockLayer(state);
+        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(renderLayer);
+        MinecraftClient.getInstance().getBlockRenderManager().getModelRenderer().render(
+                world,
+                MinecraftClient.getInstance().getBlockRenderManager().getModel(state),
+                state, pos, matrixStack, vertexConsumer,
+                false, new Random(), state.getRenderingSeed(pos),
+                OverlayTexture.DEFAULT_UV);
+        if(blockEntity.isController() && blockEntity.isOn() && blockEntity.getTaterwebzInstance() != null) {
+            renderInner(blockEntity, matrixStack, vertexConsumers, light);
+        }
+        matrixStack.pop();
+    }
+
+    private void renderInner(TaterwebzBlockEntity blockEntity, MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light) {
+        Identifier textureId = blockEntity.getTaterwebzInstance().getLastTextureId();
+        VertexConsumer vertexConsumer = textureId != null
+                ? vertexConsumers.getBuffer(RenderLayer.getText(textureId))
+                : GENERIC.getVertexConsumer(vertexConsumers, RenderLayer::getText);
+
+        Direction direction = blockEntity.getCachedState().get(GameBlock.FACING);
+        matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-direction.asRotation()));
+        if (direction.equals(Direction.SOUTH) || direction.equals(Direction.EAST)) {
+            matrixStack.translate(-Math.abs(direction.getOffsetX()), 0, 1);
+        } else {
+            matrixStack.translate(-Math.abs(direction.getOffsetZ()), 0, 0);
+        }
+        Matrix4f matrix4f = matrixStack.peek().getModel();
+
+        int width = blockEntity.getSizeX();
+        int height = blockEntity.getSizeY();
+
+        renderQuads(vertexConsumer, matrix4f,
+                -width + 1, 1,
+                -height + 1, 1,
+                -1.01F,
+                0.0F, 1.0F,
+                0.0F, 1.0F,
+                light);
+
+        //if(ProjectInception.focusedInstance == blockEntity.getGameInstance() && blockEntity.getGameInstance().shouldShowCursor()) {
+        //    VertexConsumer ptVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getText(pointerSprite.getAtlas().getId()));
+        //    float left = 1F - (float) blockEntity.getGameInstance().getLastMouseX();
+        //    float top = 1F - (float) blockEntity.getGameInstance().getLastMouseY();
+        //    renderQuads(ptVertexConsumer, matrix4f,
+        //            -width + 1 + left * width - 0.1875F, -width + 1 + left * width,
+        //            -height + 1 + top * height - 0.25F, -height + 1 + top * height,
+        //            -1.015F,
+        //            pointerSprite.getMinU() + (pointerSprite.getMaxU() - pointerSprite.getMinU()) / 4, pointerSprite.getMaxU(),
+        //            pointerSprite.getMaxV(), pointerSprite.getMinV(),
+        //            light);
+        //}
+    }
+
+    private void renderQuads(VertexConsumer vertexConsumer, Matrix4f matrix4f, float minX, float maxX, float minY, float maxY, float z, float minU, float maxU, float minV, float maxV, int light) {
+        vertexConsumer.vertex(matrix4f, minX, minY, z).color(255, 255, 255, 255).texture(maxU, minV).light(light).next();
+        vertexConsumer.vertex(matrix4f, maxX, minY, z).color(255, 255, 255, 255).texture(minU, minV).light(light).next();
+        vertexConsumer.vertex(matrix4f, maxX, maxY, z).color(255, 255, 255, 255).texture(minU, maxV).light(light).next();
+        vertexConsumer.vertex(matrix4f, minX, maxY, z).color(255, 255, 255, 255).texture(maxU, maxV).light(light).next();
+
+        vertexConsumer.vertex(matrix4f, minX, minY, z).color(255, 255, 255, 255).texture(maxU, minV).light(light).next();
+        vertexConsumer.vertex(matrix4f, minX, maxY, z).color(255, 255, 255, 255).texture(maxU, maxV).light(light).next();
+        vertexConsumer.vertex(matrix4f, maxX, maxY, z).color(255, 255, 255, 255).texture(minU, maxV).light(light).next();
+        vertexConsumer.vertex(matrix4f, maxX, minY, z).color(255, 255, 255, 255).texture(minU, minV).light(light).next();
+    }
+
+    @Override
+    public boolean rendersOutsideBoundingBox(TaterwebzBlockEntity blockEntity) {
+        return blockEntity.isController();
+    }
+
+}

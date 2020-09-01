@@ -73,6 +73,7 @@ public class TaterwebzPandomium extends Pandomium {
                     throw new CrashException(crashReport);
                 }
                 pcef.initialize();
+                ProjectInceptionBrowser.class.getName();
             }
         });
         super.getLoader().load();

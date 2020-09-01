@@ -24,6 +24,7 @@ public class GameBlockEntity extends AbstractDisplayBlockEntity<GameBlockEntity>
         super.turnOff();
     }
 
+    @Override
     public void tick() {
         super.tick();
         if(isOn && !this.isController) {
@@ -38,10 +39,11 @@ public class GameBlockEntity extends AbstractDisplayBlockEntity<GameBlockEntity>
         }
     }
 
+    @Override
     public void setController(boolean controller) {
         super.setController(controller);
         if(this.world != null && this.world.isClient && this.multiblock != null) {
-            gameInstance = new GameInstance((GameMultiblock<GameBlockEntity>) this.multiblock);
+            gameInstance = new GameInstance(this.multiblock);
             gameInstance.start();
         }
         if(!world.isClient) {

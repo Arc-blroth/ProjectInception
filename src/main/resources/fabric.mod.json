@@ -42,6 +42,10 @@
     "fabricloader": ">=0.7.8",
     "fabric": "*",
     "minecraft": "1.16.x"
+  },
+
+  "custom": {
+    "project_inception:pandomium_natives_version": "${pandomium_natives_version}"
   }
 
 }

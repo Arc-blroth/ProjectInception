@@ -1,8 +1,6 @@
 package ai.arcblroth.projectInception;
 
-import ai.arcblroth.projectInception.block.GameBlock;
-import ai.arcblroth.projectInception.block.GameBlockEntity;
-import ai.arcblroth.projectInception.block.InceptionBlock;
+import ai.arcblroth.projectInception.block.*;
 import ai.arcblroth.projectInception.item.BlockItemWithMagicness;
 import ai.arcblroth.projectInception.item.InceptionInterfaceItem;
 import ai.arcblroth.projectInception.mc.GameInstance;
@@ -44,6 +42,9 @@ public class ProjectInception implements ModInitializer {
 	public static HorizontalFacingBlock INCEPTION_BLOCK;
 	public static BlockItemWithMagicness INCEPTION_BLOCK_ITEM;
 	public static InceptionInterfaceItem INCEPTION_INTERFACE_ITEM;
+	public static TaterwebzBlock TATERWEBZ_BLOCK;
+	public static BlockItemWithMagicness TATERWEBZ_BLOCK_ITEM;
+	public static BlockEntityType<TaterwebzBlockEntity> TATERWEBZ_BLOCK_ENTITY_TYPE;
 
 	@Override
 	public void onInitialize() {
@@ -62,6 +63,12 @@ public class ProjectInception implements ModInitializer {
 				new BlockItemWithMagicness(GAME_BLOCK, new Item.Settings().group(STUFF).rarity(Rarity.RARE), false, true));
 		INCEPTION_INTERFACE_ITEM = Registry.register(Registry.ITEM, new Identifier(MODID, "inception_interface"),
 				new InceptionInterfaceItem(new Item.Settings().group(STUFF).rarity(Rarity.RARE)));
+		TATERWEBZ_BLOCK = Registry.register(Registry.BLOCK, new Identifier(MODID, "taterwebz_block"),
+				new TaterwebzBlock(AbstractBlock.Settings.of(Material.METAL).strength(2).nonOpaque().emissiveLighting((s, v, w) -> true)));
+		TATERWEBZ_BLOCK_ITEM = Registry.register(Registry.ITEM, new Identifier(MODID, "taterwebz_block"),
+				new BlockItemWithMagicness(TATERWEBZ_BLOCK, new Item.Settings().group(STUFF).rarity(Rarity.RARE), false, true));
+		TATERWEBZ_BLOCK_ENTITY_TYPE = Registry.register(Registry.BLOCK_ENTITY_TYPE, new Identifier(MODID, "taterwebz_block"),
+				BlockEntityType.Builder.create(TaterwebzBlockEntity::new, TATERWEBZ_BLOCK).build(null));
 
 		if(FabricLoader.getInstance().isModLoaded("techreborn")) {
 			RecipeYeeter.yeetRecipe(new Identifier(MODID, "inception_block_vanilla"));
