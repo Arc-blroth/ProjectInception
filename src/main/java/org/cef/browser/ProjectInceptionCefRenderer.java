@@ -1,7 +1,9 @@
 package org.cef.browser;
 
+import com.jogamp.common.nio.Buffers;
 import com.mojang.blaze3d.systems.RenderCall;
 import com.mojang.blaze3d.systems.RenderSystem;
+import org.lwjgl.BufferUtils;
 
 import java.awt.*;
 import java.nio.ByteBuffer;
@@ -20,6 +22,15 @@ public class ProjectInceptionCefRenderer {
     private Rectangle popupRect = new Rectangle(0, 0, 0, 0);
     private Rectangle originalPopupRect = new Rectangle(0, 0, 0, 0);
     private final boolean useDrawPixels = false;
+    private static final FloatBuffer vertices;
+
+    static {
+        final float[] vertex_data = {// tu,   tv,     x,     y,    z
+                0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
+                1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f};
+        vertices = BufferUtils.createFloatBuffer(vertex_data.length);
+        vertices.put(vertex_data);
+    }
 
     protected ProjectInceptionCefRenderer(boolean transparent) {
         this.transparent = transparent;
@@ -29,7 +40,7 @@ public class ProjectInceptionCefRenderer {
         return transparent;
     }
 
-    protected void initialize() {
+    public void initialize() {
         glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
 
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -56,67 +67,6 @@ public class ProjectInceptionCefRenderer {
             RenderSystem.recordRenderCall(cleanupAction);
         } else {
             cleanupAction.execute();
-        }
-    }
-
-    public void render() {
-        if (useDrawPixels || viewWidth == 0 || viewHeight == 0) return;
-
-        final float[] vertex_data = {// tu,   tv,     x,     y,    z
-                0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, -1.0f, 0.0f, 1.0f, 0.0f, 1.0f,
-                1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f};
-        FloatBuffer vertices = FloatBuffer.wrap(vertex_data);
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glMatrixMode(GL_MODELVIEW);
-        glLoadIdentity();
-
-        // Match GL units to screen coordinates.
-        glViewport(0, 0, viewWidth, viewHeight);
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-
-        // Draw the background gradient.
-        glPushAttrib(GL_ALL_ATTRIB_BITS);
-        glBegin(GL_QUADS);
-        glColor4f(1.0f, 0.0f, 0.0f, 1.0f); // red
-        glVertex2f(-1.0f, -1.0f);
-        glVertex2f(1.0f, -1.0f);
-        glColor4f(0.0f, 0.0f, 1.0f, 1.0f); // blue
-        glVertex2f(1.0f, 1.0f);
-        glVertex2f(-1.0f, 1.0f);
-        glEnd();
-        glPopAttrib();
-
-        // Rotate the view based on the mouse spin.
-        if (spinX != 0) glRotatef(-spinX, 1.0f, 0.0f, 0.0f);
-        if (spinY != 0) glRotatef(-spinY, 0.0f, 1.0f, 0.0f);
-
-        if (transparent) {
-            // Alpha blending style. Texture values have premultiplied alpha.
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-
-            // Enable alpha blending.
-            glEnable(GL_BLEND);
-        }
-
-        // Enable 2D textures.
-        glEnable(GL_TEXTURE_2D);
-
-        // Draw the facets with the texture.
-        assert (textureId[0] != 0);
-        glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-        glBindTexture(GL_TEXTURE_2D, textureId[0]);
-        glInterleavedArrays(GL_T2F_V3F, 0, vertices);
-        glDrawArrays(GL_QUADS, 0, 4);
-
-        // Disable 2D textures.
-        glDisable(GL_TEXTURE_2D);
-
-        if (transparent) {
-            // Disable alpha blending.
-            glDisable(GL_BLEND);
         }
     }
 
@@ -150,22 +100,12 @@ public class ProjectInceptionCefRenderer {
     }
 
     protected void onPaint(boolean popup, Rectangle[] dirtyRects, ByteBuffer buffer, int width, int height) {
-        initialize();
-
         if (useDrawPixels) {
             glRasterPos2f(-1, 1);
             glPixelZoom(1, -1);
             glDrawPixels(width, height, GL_BGRA, GL_UNSIGNED_BYTE, buffer);
             return;
         }
-
-        if (transparent) {
-            // Enable alpha blending.
-            glEnable(GL_BLEND);
-        }
-
-        // Enable 2D textures.
-        glEnable(GL_TEXTURE_2D);
 
         assert (textureId[0] != 0);
         glBindTexture(GL_TEXTURE_2D, textureId[0]);
@@ -217,14 +157,6 @@ public class ProjectInceptionCefRenderer {
             glPixelStorei(GL_UNPACK_SKIP_ROWS, skipRows);
             glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, buffer);
         }
-
-        // Disable 2D textures.
-        glDisable(GL_TEXTURE_2D);
-
-        if (transparent) {
-            // Disable alpha blending.
-            glDisable(GL_BLEND);
-        }
     }
 
     protected void setSpin(float spinX, float spinY) {
@@ -236,5 +168,9 @@ public class ProjectInceptionCefRenderer {
         spinX -= spinDX;
         spinY -= spinDY;
     }
-    
+
+    public int getTextureId() {
+        return textureId[0];
+    }
+
 }

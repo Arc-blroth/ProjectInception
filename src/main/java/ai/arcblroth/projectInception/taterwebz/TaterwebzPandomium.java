@@ -3,18 +3,22 @@ package ai.arcblroth.projectInception.taterwebz;
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.mixin.AccessorRenderThread;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import org.cef.CefApp;
+import org.cef.browser.CefBrowser;
 import org.cef.browser.ProjectInceptionBrowser;
 import org.panda_lang.pandomium.Pandomium;
 import org.panda_lang.pandomium.loader.PandomiumProgressListener;
 import org.panda_lang.pandomium.settings.PandomiumSettings;
 import org.panda_lang.pandomium.settings.PandomiumSettingsBuilder;
 import org.panda_lang.pandomium.util.SystemUtils;
+import org.panda_lang.pandomium.wrapper.PandomiumBrowser;
 import org.panda_lang.pandomium.wrapper.PandomiumCEF;
 
+import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.lang.reflect.Field;
@@ -59,6 +63,7 @@ public class TaterwebzPandomium extends Pandomium {
 
     @Override
     public void initialize() {
+        System.setProperty("java.awt.headless", "false");
         Toolkit.getDefaultToolkit();
         String originalNativePath = System.getProperty("java.library.path");
         super.getLoader().addProgressListener((state, progress) -> {
@@ -73,20 +78,24 @@ public class TaterwebzPandomium extends Pandomium {
                     throw new CrashException(crashReport);
                 }
                 pcef.initialize();
+                // Force the browser class to load now
+                // in case of link errors
                 ProjectInceptionBrowser.class.getName();
+                ClientTickEvents.END_CLIENT_TICK.register(TaterwebzPandomium::doMessageLoopWork);
             }
         });
         super.getLoader().load();
     }
 
     public static ProjectInceptionBrowser createBrowser(String url, int width, int height) {
+        ProjectInception.LOGGER.info("Creating browser with url " + url);
         if (ProjectInceptionClient.PANDOMIUM_CLIENT.getCefClient().isDisposed_) {
             throw new IllegalStateException("Can't create browser. CefClient is disposed.");
         }
-        return new ProjectInceptionBrowser(ProjectInceptionClient.PANDOMIUM_CLIENT.getCefClient(), url, false, null, width, height);
+        return new ProjectInceptionBrowser(ProjectInceptionClient.PANDOMIUM_CLIENT.getCefClient(), url, false, width, height, null);
     }
 
-    public static void doMessageLoopWork() {
+    public static void doMessageLoopWork(MinecraftClient client) {
         if (CefApp.getState() != CefApp.CefAppState.TERMINATED) {
             CefApp.self.N_DoMessageLoopWork();
         }

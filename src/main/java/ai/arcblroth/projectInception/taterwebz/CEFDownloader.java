@@ -10,10 +10,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.MethodNode;
 import org.panda_lang.pandomium.loader.PandomiumProgressListener;
+import org.panda_lang.pandomium.wrapper.PandomiumBrowser;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -21,7 +21,6 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
-import java.util.Iterator;
 
 public class CEFDownloader implements PostLaunchEntrypoint {
 
@@ -80,13 +79,13 @@ public class CEFDownloader implements PostLaunchEntrypoint {
         } catch (Throwable e) {
             bar.setProgress(1);
             e.printStackTrace();
-            bar.setText("Project Inception - CEF Initalization Failed: " + e.getLocalizedMessage());
+            bar.setText("Project Inception - CEF Initialization Failed: " + e.getLocalizedMessage());
             sleep(1000);
             RenderSystem.recordRenderCall(() -> {
                 if (e instanceof CrashException) {
                     throw (CrashException)e;
                 } else {
-                    CrashReport crashReport = new CrashReport("CEF Initalization Failed", e);
+                    CrashReport crashReport = new CrashReport("CEF Initialization Failed", e);
                     TaterwebzPandomium.addDetailsToCrashReport(crashReport);
                     throw new CrashException(crashReport);
                 }
