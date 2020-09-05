@@ -61,10 +61,19 @@ dependencies {
 		exclude module: "panda-utilities"
 	}
 	// Pandomium natives are loaded dynamically in production
+	runtimeOnly("org.panda-lang:pandomium:${project.pandomium_version}") {
+		exclude group: "org.slf4j"
+		exclude group: "org.panda-lang.pandomium-natives"
+		exclude module: "panda"
+		exclude module: "pandomium"
+		exclude module: "panda-framework"
+		exclude module: "panda-utilities"
+	}
 	shadow("org.panda-lang:pandomium:${project.pandomium_version}") {
 		exclude group: "org.slf4j"
 		exclude group: "org.panda-lang.pandomium-natives"
 		exclude module: "panda"
+		exclude module: "pandomium"
 		exclude module: "panda-framework"
 		exclude module: "panda-utilities"
 	}

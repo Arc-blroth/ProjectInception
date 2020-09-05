@@ -5,6 +5,8 @@ import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.wire.DocumentContext;
 
+import java.io.*;
+
 /**
  * A message sent through a Chronicle Queue
  * has the basic format:
@@ -18,6 +20,7 @@ import net.openhft.chronicle.wire.DocumentContext;
  * <ol start="0">
  *     <li>
  *         {@link MessageType#IMAGE} | child &rarr; parent | RGBA encoded image.<br>
+ *         <code>int browser // Only for the taterwebz protocol</code><br>
  *         <code>int fboWidth</code><br>
  *         <code>int fboHeight</code><br>
  *         <code>boolean showCursor</code><br>
@@ -56,6 +59,18 @@ import net.openhft.chronicle.wire.DocumentContext;
  *         <code>int codepoint</code><br>
  *         <code>int mods</code><br>
  *     </li>
+ *     <li>
+ *         {@link MessageType#LOAD_PROGRESS} | child &rarr; parent | only used for Taterwebz.<br>
+ *         <code>float progress</code><br>
+ *         <code>boolean done</code><br>
+ *         <code>String text</code><br>
+ *     </li>
+ *     <li>
+ *         {@link MessageType#OWO} | child &rarr; parent | notify parent process of crash.<br>
+ *         <code>StackTraceElement[] stackTrace</code><br>
+ *         <code>String title</code><br>
+ *         <code>String[][] details</code><br>
+ *     </li>
  * </ol>
  */
 public class QueueProtocol {
@@ -68,7 +83,9 @@ public class QueueProtocol {
         MOUSE_MOVE(4),
         MOUSE_SET_POS(5),
         KEYBOARD_KEY(6),
-        KEYBOARD_CHAR(7);
+        KEYBOARD_CHAR(7),
+        LOAD_PROGRESS(8),
+        OWO(9);
 
         public final byte header;
 
@@ -136,6 +153,20 @@ public class QueueProtocol {
         @Override public MessageType getMessageType() { return MessageType.KEYBOARD_CHAR; }
     }
 
+    public static final class LoadProgressMessage extends Message {
+        public float progress;
+        public boolean done;
+        public String text;
+        @Override public MessageType getMessageType() { return MessageType.LOAD_PROGRESS; }
+    }
+
+    public static final class OwoMessage extends Message implements Serializable {
+        public Throwable throwable;
+        public String title;
+        public String[][] details;
+        @Override public MessageType getMessageType() { return MessageType.OWO; }
+    }
+
     public static MessageType peekMessageType(ExcerptTailer tailer) {
         long index = tailer.index();
         if(index == 0) return MessageType.I_HAVE_NO_IDEA;
@@ -152,7 +183,9 @@ public class QueueProtocol {
     public static void writeParent2ChildMessage(Message message, ExcerptAppender appender) {
         MessageType type = message.getMessageType();
         if(type.equals(MessageType.I_HAVE_NO_IDEA)) throw new NullPointerException("Unknown message type");
-        if(type.equals(MessageType.IMAGE)) throw new IllegalStateException("ImageMessage is not a parent -> child message");
+        if(type.equals(MessageType.IMAGE) || type.equals(MessageType.LOAD_PROGRESS) || type.equals(MessageType.OWO)) {
+            throw new IllegalStateException("Not a parent -> child message");
+        }
         appender.writeBytes(b -> {
             b.writeByte(type.header);
             if(message instanceof MouseButtonMessage) {
@@ -201,7 +234,9 @@ public class QueueProtocol {
         byte header = bytes.readByte();
         MessageType messageType = MessageType.fromHeader(header);
         if(messageType.equals(MessageType.I_HAVE_NO_IDEA)) return new Message();
-        if(messageType.equals(MessageType.IMAGE)) return new Message();
+        if(messageType.equals(MessageType.IMAGE) || messageType.equals(MessageType.LOAD_PROGRESS) || messageType.equals(MessageType.OWO)) {
+            return new Message();
+        }
         if(messageType.equals(MessageType.MOUSE_BUTTON)) {
             MouseButtonMessage mbMessage = new MouseButtonMessage();
             mbMessage.button = bytes.readInt();
@@ -234,6 +269,66 @@ public class QueueProtocol {
             kcMessage.codepoint = bytes.readInt();
             kcMessage.mods = bytes.readInt();
             return kcMessage;
+        } else {
+            throw new RuntimeException("Why did you add something to my enum!?");
+        }
+    }
+
+    public static void writeChild2ParentMessage(Message message, ExcerptAppender appender) {
+        MessageType type = message.getMessageType();
+        if(type.equals(MessageType.I_HAVE_NO_IDEA)) throw new NullPointerException("Unknown message type");
+        if(!(type.equals(MessageType.IMAGE) || type.equals(MessageType.LOAD_PROGRESS) || type.equals(MessageType.OWO))) {
+            throw new IllegalStateException("Not a child -> parent message");
+        }
+        appender.writeBytes(b -> {
+            b.writeByte(type.header);
+            if(message instanceof LoadProgressMessage) {
+                LoadProgressMessage lpMessage = (LoadProgressMessage) message;
+                b.writeFloat(lpMessage.progress);
+                b.writeBoolean(lpMessage.done);
+                b.writeUtf8(lpMessage.text);
+            } else if(message instanceof OwoMessage) {
+                try {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    ObjectOutputStream oos = new ObjectOutputStream(baos);
+                    oos.writeObject(message);
+                    oos.close();
+                    byte[] serializedStackTrace = baos.toByteArray();
+                    b.writeInt(serializedStackTrace.length);
+                    b.write(serializedStackTrace);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
+
+    public static Message readChild2ParentMessage(Bytes<?> bytes) {
+        byte header = bytes.readByte();
+        MessageType messageType = MessageType.fromHeader(header);
+        if(messageType.equals(MessageType.I_HAVE_NO_IDEA)) return new Message();
+        if(!(messageType.equals(MessageType.IMAGE) || messageType.equals(MessageType.LOAD_PROGRESS) || messageType.equals(MessageType.OWO))) {
+            return new Message();
+        }
+        if(messageType.equals(MessageType.LOAD_PROGRESS)) {
+            LoadProgressMessage lpMessage = new LoadProgressMessage();
+            lpMessage.progress = bytes.readFloat();
+            lpMessage.done = bytes.readBoolean();
+            lpMessage.text = bytes.readUtf8();
+            return lpMessage;
+        } else if(messageType.equals(MessageType.OWO)) {
+            try {
+                int length = bytes.readInt();
+                byte[] buffer = new byte[length];
+                bytes.read(buffer);
+                ByteArrayInputStream bais = new ByteArrayInputStream(buffer);
+                ObjectInputStream ois = new ObjectInputStream(bais);
+                OwoMessage owoMessage = (OwoMessage) ois.readObject();
+                ois.close();
+                return owoMessage;
+            } catch (IOException | ClassNotFoundException e) {
+                return new Message();
+            }
         } else {
             throw new RuntimeException("Why did you add something to my enum!?");
         }

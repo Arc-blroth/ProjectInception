@@ -6,7 +6,6 @@ import io.github.a5b84.darkloadingscreen.Mod;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.gui.screen.Overlay;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.SplashScreen;
 import net.minecraft.client.util.math.MatrixStack;
@@ -90,7 +89,7 @@ public class MixinSplashScreen {
             } else {
                 projectInceptionShouldRenderBar = true;
                 if (projectInceptionCurrentEntrypoint == -1 || (projectInceptionCurrentEntrypoint < projectInceptionEntrypoints.size() && projectInceptionCurrentEntrypointFuture.isDone())) {
-                    projectInceptionCurrentBar = new ProgressBar((SplashScreen) (Object) this);
+                    projectInceptionCurrentBar = new ProgressBar();
                     projectInceptionCurrentEntrypoint++;
                     if (projectInceptionCurrentEntrypoint < projectInceptionEntrypoints.size()) {
                         projectInceptionProgress = 0;

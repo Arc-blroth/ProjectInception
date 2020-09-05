@@ -22,7 +22,6 @@ import org.lwjgl.BufferUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -90,26 +89,7 @@ public class GameInstance {
 
         this.multiblock = multiblock;
 
-        commandLine = new ArrayList<>();
-        commandLine.add(System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
-        List<String> jvmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
-        commandLine.addAll(jvmArgs);
-        if(!FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            if (!jvmArgs.stream().anyMatch(s -> s.contains("-cp") || s.contains("-classpath"))) {
-                commandLine.add("-cp");
-                commandLine.add(System.getProperty("java.class.path"));
-            }
-            if (!jvmArgs.stream().anyMatch(s -> s.contains("-Djava.library.path"))) {
-                commandLine.add("-Djava.library.path=" + System.getProperty("java.library.path"));
-            }
-        } else {
-            commandLine.removeIf(s -> s.startsWith("-javaagent") || s.startsWith("-agentlib"));
-            commandLine.add("-cp");
-            commandLine.add(System.getProperty("java.class.path"));
-            if(System.getProperty("java.library.path").length() > 0) {
-                commandLine.add("-Djava.library.path=" + System.getProperty("java.library.path"));
-            }
-        }
+        commandLine = ProjectInceptionEarlyRiser.newCommandLineForForking();
         String newInstancePrefix = ProjectInceptionEarlyRiser.INSTANCE_PREFIX + "-" + instanceNumber;
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_IS_INNER + "=true");
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_WIDTH

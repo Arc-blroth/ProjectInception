@@ -1,11 +1,8 @@
 package ai.arcblroth.projectInception.block;
 
 import ai.arcblroth.projectInception.ProjectInception;
-import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.taterwebz.TaterwebzInstance;
-import ai.arcblroth.projectInception.taterwebz.TaterwebzPandomium;
 import net.minecraft.block.entity.BlockEntity;
-import org.cef.browser.ProjectInceptionBrowser;
 
 public class TaterwebzBlockEntity extends AbstractDisplayBlockEntity<TaterwebzBlockEntity> {
 

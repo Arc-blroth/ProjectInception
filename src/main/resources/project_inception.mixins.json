@@ -4,7 +4,6 @@
   "package": "ai.arcblroth.projectInception.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
-    "AccessorRenderThread",
     "MixinClientMain",
     "MixinHeldItemRenderer",
     "MixinInGameHud",

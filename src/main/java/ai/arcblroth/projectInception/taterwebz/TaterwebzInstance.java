@@ -1,13 +1,11 @@
 package ai.arcblroth.projectInception.taterwebz;
 
 import ai.arcblroth.projectInception.ProjectInception;
-import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.block.GameMultiblock;
 import ai.arcblroth.projectInception.block.TaterwebzBlockEntity;
-import ai.arcblroth.projectInception.mc.QueueProtocol;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.data.client.model.Texture;
+import ai.arcblroth.taterwebz.TaterwebzChild;
+import ai.arcblroth.taterwebz.TaterwebzPandomium;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Level;
 import org.cef.browser.ProjectInceptionBrowser;
@@ -39,7 +37,6 @@ public class TaterwebzInstance {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             ProjectInception.LOGGER.log(Level.INFO, "Destroying taterwebz instances on exit...");
             stopAllTaterwebzInstances();
-            ProjectInceptionClient.PANDOMIUM_CLIENT.getCefClient().dispose();
         }));
     }
 
@@ -70,7 +67,6 @@ public class TaterwebzInstance {
     public void stop(boolean async) {
         Runnable stopFunc = () -> {
             browser.onBeforeClose();
-            browser.dispose();
         };
         if(async) {
             new Thread(stopFunc).start();
@@ -81,11 +77,7 @@ public class TaterwebzInstance {
 
     public Identifier getLastTextureId() {
         if(textureId == null) {
-            if(browser != null && browser.getTexture() != 0) {
-                lastTextureImage = new CEFTexture(browser.getTexture());
-                textureId = getNextTaterwebzTextureId();
-                MinecraftClient.getInstance().getTextureManager().registerTexture(textureId, lastTextureImage);
-            }
+
         }
         return textureId;
     }

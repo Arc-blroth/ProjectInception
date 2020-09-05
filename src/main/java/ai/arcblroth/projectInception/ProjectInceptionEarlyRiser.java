@@ -18,6 +18,9 @@ import org.objectweb.asm.tree.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ListIterator;
 import java.util.function.Predicate;
 
@@ -27,6 +30,7 @@ public class ProjectInceptionEarlyRiser implements Runnable {
     public static final String ARG_DISPLAY_WIDTH;
     public static final String ARG_DISPLAY_HEIGHT;
     public static final String ARG_INSTANCE_PREFIX;
+    public static final String ARG_BROWSER_PREFIX;
 
     public static final int DISPLAY_SCALE = 64;
 
@@ -37,6 +41,7 @@ public class ProjectInceptionEarlyRiser implements Runnable {
     public static final Logger LOGGER = LogManager.getLogger("ProjectInception");
     public static final boolean IS_INNER;
     public static final String INSTANCE_PREFIX;
+    public static final String BROWSER_PREFIX;
     public static String[] ARGUMENTS = new String[0];
 
     static {
@@ -45,12 +50,38 @@ public class ProjectInceptionEarlyRiser implements Runnable {
         ARG_DISPLAY_WIDTH = className + ".DISPLAY_WIDTH";
         ARG_DISPLAY_HEIGHT = className + ".DISPLAY_HEIGHT";
         ARG_INSTANCE_PREFIX = className + ".INSTANCE_PREFIX";
+        ARG_BROWSER_PREFIX = className + ".BROWSER_PREFIX";
 
         IS_INNER = System.getProperty(ARG_IS_INNER) != null
                 && System.getProperty(ARG_IS_INNER).equals("true");
         INSTANCE_PREFIX = System.getProperty(ARG_INSTANCE_PREFIX) != null
                 ? System.getProperty(ARG_INSTANCE_PREFIX)
                 : "inst";
+        BROWSER_PREFIX = "taterwebz-child-process";
+    }
+
+    public static ArrayList<String> newCommandLineForForking() {
+        ArrayList<String> commandLine = new ArrayList<>();
+        commandLine.add(System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
+        List<String> jvmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
+        commandLine.addAll(jvmArgs);
+        if(!FabricLoader.getInstance().isDevelopmentEnvironment()) {
+            if (!jvmArgs.stream().anyMatch(s -> s.contains("-cp") || s.contains("-classpath"))) {
+                commandLine.add("-cp");
+                commandLine.add(System.getProperty("java.class.path"));
+            }
+            if (!jvmArgs.stream().anyMatch(s -> s.contains("-Djava.library.path"))) {
+                commandLine.add("-Djava.library.path=" + System.getProperty("java.library.path"));
+            }
+        } else {
+            commandLine.removeIf(s -> s.startsWith("-javaagent") || s.startsWith("-agentlib"));
+            commandLine.add("-cp");
+            commandLine.add(System.getProperty("java.class.path"));
+            if(System.getProperty("java.library.path").length() > 0) {
+                commandLine.add("-Djava.library.path=" + System.getProperty("java.library.path"));
+            }
+        }
+        return commandLine;
     }
 
     @Override

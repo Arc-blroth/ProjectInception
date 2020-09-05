@@ -2,7 +2,7 @@ package ai.arcblroth.projectInception;
 
 import ai.arcblroth.projectInception.client.GameBlockEntityRenderer;
 import ai.arcblroth.projectInception.client.TaterwebzBlockEntityRenderer;
-import ai.arcblroth.projectInception.taterwebz.TaterwebzPandomium;
+import ai.arcblroth.taterwebz.TaterwebzPandomium;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendereregistry.v1.BlockEntityRendererRegistry;
@@ -13,8 +13,7 @@ import org.panda_lang.pandomium.wrapper.PandomiumClient;
 public class ProjectInceptionClient implements ClientModInitializer {
 
     public static KeyBinding EXIT_INNER_LOCK;
-    public static TaterwebzPandomium PANDOMIUM;
-    public static PandomiumClient PANDOMIUM_CLIENT;
+    public static Process TATERWEBZ_CHILD_PROCESS;
 
     @Override
     public void onInitializeClient() {

@@ -4,13 +4,8 @@ import net.minecraft.client.gui.screen.SplashScreen;
 
 public class ProgressBar {
 
-    private final SplashScreen splash;
     private float progress = 0F;
     private String text = "";
-
-    public ProgressBar(SplashScreen splash) {
-        this.splash = splash;
-    }
 
     public float getProgress() {
         return progress;
