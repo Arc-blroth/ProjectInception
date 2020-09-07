@@ -3,7 +3,7 @@ package ai.arcblroth.projectInception;
 import ai.arcblroth.projectInception.block.*;
 import ai.arcblroth.projectInception.item.BlockItemWithMagicness;
 import ai.arcblroth.projectInception.item.InceptionInterfaceItem;
-import ai.arcblroth.projectInception.mc.GameInstance;
+import ai.arcblroth.projectInception.client.mc.MinecraftGameInstance;
 import ai.arcblroth.projectInception.util.RecipeYeeter;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
@@ -22,11 +22,6 @@ import net.openhft.chronicle.queue.ChronicleQueue;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
-import java.lang.management.ManagementFactory;
-import java.util.ArrayList;
-import java.util.List;
-
 public class ProjectInception implements ModInitializer {
 
 	public static final String MODID = "project_inception";
@@ -37,7 +32,7 @@ public class ProjectInception implements ModInitializer {
 	public static final String DEV_MAIN_CLASS = "net.fabricmc.devlaunchinjector.Main";
 
 	public static ChronicleQueue toParentQueue = null;
-	public static GameInstance focusedInstance = null;
+	public static MinecraftGameInstance focusedInstance = null;
 
 	public static ItemGroup STUFF;
 

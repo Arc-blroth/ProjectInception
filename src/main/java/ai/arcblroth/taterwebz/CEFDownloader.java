@@ -1,12 +1,10 @@
 package ai.arcblroth.taterwebz;
 
 import ai.arcblroth.projectInception.ProjectInception;
-import ai.arcblroth.projectInception.mc.QueueProtocol;
+import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import ai.arcblroth.taterwebz.util.HeadlessProgressBar;
 import ai.arcblroth.taterwebz.util.NotKnotClassLoader;
-import org.panda_lang.pandomium.Pandomium;
 import org.panda_lang.pandomium.loader.PandomiumProgressListener;
-import org.panda_lang.pandomium.wrapper.PandomiumCEF;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -55,7 +53,7 @@ public class CEFDownloader {
                     bar.setProgress(0.4F + progress / (100 / 0.4F));
                 }
             });
-            pandomium.initialize();
+            pandomium.initialize(classLoader);
             bar.setProgress(0.8F);
             bar.setText("Project Inception - Initializing CEF [4/4]");
             bar.update();

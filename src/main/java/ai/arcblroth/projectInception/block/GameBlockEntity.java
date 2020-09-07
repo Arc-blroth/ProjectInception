@@ -1,6 +1,6 @@
 package ai.arcblroth.projectInception.block;
 
-import ai.arcblroth.projectInception.mc.GameInstance;
+import ai.arcblroth.projectInception.client.mc.MinecraftGameInstance;
 import ai.arcblroth.projectInception.ProjectInception;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.predicate.entity.EntityPredicates;
@@ -10,7 +10,7 @@ import net.minecraft.util.Util;
 
 public class GameBlockEntity extends AbstractDisplayBlockEntity<GameBlockEntity> {
 
-    private GameInstance gameInstance = null;
+    private MinecraftGameInstance gameInstance = null;
 
     public GameBlockEntity() {
         super(ProjectInception.GAME_BLOCK_ENTITY_TYPE, GameBlockEntity.class);
@@ -43,7 +43,7 @@ public class GameBlockEntity extends AbstractDisplayBlockEntity<GameBlockEntity>
     public void setController(boolean controller) {
         super.setController(controller);
         if(this.world != null && this.world.isClient && this.multiblock != null) {
-            gameInstance = new GameInstance(this.multiblock);
+            gameInstance = new MinecraftGameInstance(this.multiblock);
             gameInstance.start();
         }
         if(!world.isClient) {
@@ -57,7 +57,7 @@ public class GameBlockEntity extends AbstractDisplayBlockEntity<GameBlockEntity>
         }
     }
 
-    public GameInstance getGameInstance() {
+    public MinecraftGameInstance getGameInstance() {
         return gameInstance;
     }
 

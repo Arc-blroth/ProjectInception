@@ -30,7 +30,7 @@ public class TaterwebzBlock extends AbstractDisplayBlock<TaterwebzBlockEntity> {
                 //MinecraftClient.getInstance().openScreen(new InceptionInterfaceScreen(ge));
                 //player.sendMessage(new TranslatableText("message.project_inception.escape", ProjectInceptionClient.EXIT_INNER_LOCK.getBoundKeyLocalizedText()), true);
             } else {
-                te.getTaterwebzInstance().getBrowser().click(hitX, hitY);
+                te.getTaterwebzInstance().click(hitX, hitY);
             }
         }
     }

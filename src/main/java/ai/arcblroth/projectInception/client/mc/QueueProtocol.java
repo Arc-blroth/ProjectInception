@@ -1,4 +1,4 @@
-package ai.arcblroth.projectInception.mc;
+package ai.arcblroth.projectInception.client.mc;
 
 import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.queue.ExcerptAppender;
@@ -20,7 +20,6 @@ import java.io.*;
  * <ol start="0">
  *     <li>
  *         {@link MessageType#IMAGE} | child &rarr; parent | RGBA encoded image.<br>
- *         <code>int browser // Only for the taterwebz protocol</code><br>
  *         <code>int fboWidth</code><br>
  *         <code>int fboHeight</code><br>
  *         <code>boolean showCursor</code><br>
@@ -66,8 +65,15 @@ import java.io.*;
  *         <code>String text</code><br>
  *     </li>
  *     <li>
+ *         {@link MessageType#REQUEST_BROWSER} | parent &rarr; child | only used for Taterwebz.<br>
+ *         <code>boolean createOrDestroy // true for create and false for destroy</code><br>
+ *         <code>int uuid</code><br>
+ *         <code>int width // width and height are 0 for destroy</code><br>
+ *         <code>int height</code><br>
+ *     </li>
+ *     <li>
  *         {@link MessageType#OWO} | child &rarr; parent | notify parent process of crash.<br>
- *         <code>StackTraceElement[] stackTrace</code><br>
+ *         <code>Throwable throwable</code><br>
  *         <code>String title</code><br>
  *         <code>String[][] details</code><br>
  *     </li>
@@ -85,7 +91,8 @@ public class QueueProtocol {
         KEYBOARD_KEY(6),
         KEYBOARD_CHAR(7),
         LOAD_PROGRESS(8),
-        OWO(9);
+        REQUEST_BROWSER(9),
+        OWO(10);
 
         public final byte header;
 
@@ -160,11 +167,23 @@ public class QueueProtocol {
         @Override public MessageType getMessageType() { return MessageType.LOAD_PROGRESS; }
     }
 
+    public static final class RequestBrowserMessage extends Message {
+        public boolean createOrDestroy;
+        public int uuid;
+        public int width;
+        public int height;
+        @Override public MessageType getMessageType() { return MessageType.REQUEST_BROWSER; }
+    }
+
     public static final class OwoMessage extends Message implements Serializable {
         public Throwable throwable;
         public String title;
         public String[][] details;
         @Override public MessageType getMessageType() { return MessageType.OWO; }
+    }
+    
+    private static boolean isChild2ParentMessage(MessageType type) {
+        return type.equals(MessageType.IMAGE) || type.equals(MessageType.LOAD_PROGRESS) || type.equals(MessageType.OWO);
     }
 
     public static MessageType peekMessageType(ExcerptTailer tailer) {
@@ -183,7 +202,7 @@ public class QueueProtocol {
     public static void writeParent2ChildMessage(Message message, ExcerptAppender appender) {
         MessageType type = message.getMessageType();
         if(type.equals(MessageType.I_HAVE_NO_IDEA)) throw new NullPointerException("Unknown message type");
-        if(type.equals(MessageType.IMAGE) || type.equals(MessageType.LOAD_PROGRESS) || type.equals(MessageType.OWO)) {
+        if(isChild2ParentMessage(type)) {
             throw new IllegalStateException("Not a parent -> child message");
         }
         appender.writeBytes(b -> {
@@ -214,27 +233,23 @@ public class QueueProtocol {
                 KeyboardCharMessage kcMessage = (KeyboardCharMessage) message;
                 b.writeInt(kcMessage.codepoint);
                 b.writeInt(kcMessage.mods);
+            } else if(message instanceof RequestBrowserMessage) {
+                RequestBrowserMessage rbMessage = (RequestBrowserMessage) message;
+                b.writeBoolean(rbMessage.createOrDestroy);
+                b.writeInt(rbMessage.uuid);
+                if(rbMessage.createOrDestroy) {
+                    b.writeInt(rbMessage.width);
+                    b.writeInt(rbMessage.height);
+                }
             }
         });
-    }
-
-    public static Message readParent2ChildMessage(ExcerptTailer tailer) {
-        long index = tailer.index();
-        if(index == 0) return new Message();
-        try (DocumentContext dc = tailer.readingDocument()) {
-            if(dc.isPresent()) {
-                Bytes<?> bytes = dc.wire().bytes();
-                return readParent2ChildMessage(bytes);
-            }
-            return new Message();
-        }
     }
 
     public static Message readParent2ChildMessage(Bytes<?> bytes) {
         byte header = bytes.readByte();
         MessageType messageType = MessageType.fromHeader(header);
         if(messageType.equals(MessageType.I_HAVE_NO_IDEA)) return new Message();
-        if(messageType.equals(MessageType.IMAGE) || messageType.equals(MessageType.LOAD_PROGRESS) || messageType.equals(MessageType.OWO)) {
+        if(isChild2ParentMessage(messageType)) {
             return new Message();
         }
         if(messageType.equals(MessageType.MOUSE_BUTTON)) {
@@ -269,6 +284,15 @@ public class QueueProtocol {
             kcMessage.codepoint = bytes.readInt();
             kcMessage.mods = bytes.readInt();
             return kcMessage;
+        } else if(messageType.equals(MessageType.REQUEST_BROWSER)) {
+            RequestBrowserMessage rbMessage = new RequestBrowserMessage();
+            rbMessage.createOrDestroy = bytes.readBoolean();
+            rbMessage.uuid = bytes.readInt();
+            if(rbMessage.createOrDestroy) {
+                rbMessage.width = bytes.readInt();
+                rbMessage.height = bytes.readInt();
+            }
+            return rbMessage;
         } else {
             throw new RuntimeException("Why did you add something to my enum!?");
         }
@@ -277,7 +301,7 @@ public class QueueProtocol {
     public static void writeChild2ParentMessage(Message message, ExcerptAppender appender) {
         MessageType type = message.getMessageType();
         if(type.equals(MessageType.I_HAVE_NO_IDEA)) throw new NullPointerException("Unknown message type");
-        if(!(type.equals(MessageType.IMAGE) || type.equals(MessageType.LOAD_PROGRESS) || type.equals(MessageType.OWO))) {
+        if(!isChild2ParentMessage(type)) {
             throw new IllegalStateException("Not a child -> parent message");
         }
         appender.writeBytes(b -> {
@@ -307,7 +331,7 @@ public class QueueProtocol {
         byte header = bytes.readByte();
         MessageType messageType = MessageType.fromHeader(header);
         if(messageType.equals(MessageType.I_HAVE_NO_IDEA)) return new Message();
-        if(!(messageType.equals(MessageType.IMAGE) || messageType.equals(MessageType.LOAD_PROGRESS) || messageType.equals(MessageType.OWO))) {
+        if(!isChild2ParentMessage(messageType)) {
             return new Message();
         }
         if(messageType.equals(MessageType.LOAD_PROGRESS)) {

@@ -2,7 +2,7 @@ package ai.arcblroth.projectInception.mixin;
 
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
-import ai.arcblroth.projectInception.mc.QueueProtocol;
+import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Window;

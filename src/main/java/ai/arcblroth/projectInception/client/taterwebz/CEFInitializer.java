@@ -1,4 +1,4 @@
-package ai.arcblroth.projectInception.taterwebz;
+package ai.arcblroth.projectInception.client.taterwebz;
 
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionClient;
@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import static ai.arcblroth.projectInception.mc.QueueProtocol.*;
+import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
 
 public class CEFInitializer implements PostLaunchEntrypoint {
 
@@ -39,8 +39,9 @@ public class CEFInitializer implements PostLaunchEntrypoint {
             }
             ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS = new ProcessBuilder(commandLine).inheritIO().start();
             ChronicleQueue childQueue = ProjectInceptionEarlyRiser.buildQueue(
-                    new File(MinecraftClient.getInstance().runDirectory, "projectInception" + File.separator + ProjectInceptionEarlyRiser.BROWSER_PREFIX)
+                    new File(MinecraftClient.getInstance().runDirectory, "projectInception" + File.separator + ProjectInceptionEarlyRiser.TATERWEBZ_PREFIX)
             );
+            ProjectInceptionClient.TATERWEBZ_CHILD_QUEUE = childQueue;
             ExcerptTailer tailer = childQueue.createTailer("postlaunch");
             tailer.toEnd();
             final int framerateLimit = MinecraftClient.getInstance().getWindow().getFramerateLimit();

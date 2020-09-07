@@ -1,7 +1,7 @@
 package ai.arcblroth.taterwebz.util;
 
 import ai.arcblroth.projectInception.ProjectInception;
-import ai.arcblroth.projectInception.mc.QueueProtocol;
+import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import ai.arcblroth.projectInception.postlaunch.ProgressBar;
 
 public class HeadlessProgressBar extends ProgressBar {

@@ -2,7 +2,6 @@ package ai.arcblroth.projectInception;
 
 import com.chocohead.mm.api.ClassTinkerers;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.openhft.chronicle.queue.ChronicleQueue;
@@ -12,7 +11,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
-import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
@@ -41,6 +39,7 @@ public class ProjectInceptionEarlyRiser implements Runnable {
     public static final Logger LOGGER = LogManager.getLogger("ProjectInception");
     public static final boolean IS_INNER;
     public static final String INSTANCE_PREFIX;
+    public static final String TATERWEBZ_PREFIX;
     public static final String BROWSER_PREFIX;
     public static String[] ARGUMENTS = new String[0];
 
@@ -57,7 +56,10 @@ public class ProjectInceptionEarlyRiser implements Runnable {
         INSTANCE_PREFIX = System.getProperty(ARG_INSTANCE_PREFIX) != null
                 ? System.getProperty(ARG_INSTANCE_PREFIX)
                 : "inst";
-        BROWSER_PREFIX = "taterwebz-child-process";
+        TATERWEBZ_PREFIX = "taterwebz-child-process";
+        BROWSER_PREFIX = System.getProperty(ARG_INSTANCE_PREFIX) != null
+                ? System.getProperty(ARG_INSTANCE_PREFIX)
+                : "browser";
     }
 
     public static ArrayList<String> newCommandLineForForking() {

@@ -1,11 +1,12 @@
-package ai.arcblroth.projectInception.mc;
+package ai.arcblroth.projectInception.client;
 
 import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
-import ai.arcblroth.projectInception.block.GameBlockEntity;
+import ai.arcblroth.projectInception.block.AbstractDisplayBlockEntity;
 import ai.arcblroth.projectInception.block.GameMultiblock;
+import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.NativeImageBackedTexture;
@@ -21,36 +22,28 @@ import org.apache.logging.log4j.Level;
 import org.lwjgl.BufferUtils;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.OptionalLong;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static ai.arcblroth.projectInception.mc.QueueProtocol.*;
+import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.memAddress;
 
-public class GameInstance {
+public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<T>> {
 
     private static int instanceCounter = 0;
     private static final Object cleanUpLock = new Object();
-    private static final ArrayList<GameInstance> instancesToCleanUp = new ArrayList<>();
-    private final int instanceNumber;
+    private static final ArrayList<AbstractGameInstance<?>> instancesToCleanUp = new ArrayList<>();
+    protected final int instanceNumber;
 
-    private final GameMultiblock<GameBlockEntity> multiblock;
+    protected final GameMultiblock<T> multiblock;
 
-    private Process process;
-    private final Object processLock = new Object();
-    private boolean isProcessBeingKilled = false;
-    private final ArrayList<String> commandLine;
-
-    private final ChronicleQueue childQueue;
-    private final ExcerptTailer tailer;
-    private OptionalLong tailerStartIndex = OptionalLong.empty();
+    protected final ChronicleQueue childQueue;
+    protected final ExcerptTailer tailer;
+    protected OptionalLong tailerStartIndex = OptionalLong.empty();
     private final Thread tailerThread;
 
     private int lastWidth = 0;
@@ -68,8 +61,20 @@ public class GameInstance {
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            ProjectInception.LOGGER.log(Level.INFO, "Destroying game instances on exit...");
+            ProjectInception.LOGGER.log(Level.INFO, "Destroying game and taterwebz instances on exit...");
             stopAllGameInstances();
+            if(ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS != null) {
+                ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS.destroy();
+                for(int i = 0; ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS.isAlive() && i < 10; i++) {
+                    iSleep(300);
+                }
+                if(ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS.isAlive()) {
+                    ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS.destroyForcibly();
+                }
+            }
+            if(ProjectInceptionClient.TATERWEBZ_CHILD_QUEUE != null) {
+                ProjectInceptionClient.TATERWEBZ_CHILD_QUEUE.close();
+            }
             if(ProjectInception.toParentQueue != null
             && !ProjectInception.toParentQueue.isClosed()) {
                 ProjectInception.toParentQueue.close();
@@ -80,7 +85,7 @@ public class GameInstance {
         }));
     }
 
-    public GameInstance(GameMultiblock<GameBlockEntity> multiblock) {
+    public AbstractGameInstance(GameMultiblock<T> multiblock) {
         instanceNumber = instanceCounter;
         instanceCounter++;
         synchronized (cleanUpLock) {
@@ -88,68 +93,23 @@ public class GameInstance {
         }
 
         this.multiblock = multiblock;
-
-        commandLine = ProjectInceptionEarlyRiser.newCommandLineForForking();
-        String newInstancePrefix = ProjectInceptionEarlyRiser.INSTANCE_PREFIX + "-" + instanceNumber;
-        commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_IS_INNER + "=true");
-        commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_WIDTH
-                + "=" + (multiblock.sizeX * ProjectInceptionEarlyRiser.DISPLAY_SCALE));
-        commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_HEIGHT
-                + "=" + (multiblock.sizeY * ProjectInceptionEarlyRiser.DISPLAY_SCALE));
-        commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_INSTANCE_PREFIX + "=" + newInstancePrefix);
-        if(!FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            commandLine.add(ProjectInception.MAIN_CLASS);
-            List<String> cmdArgs = Arrays.asList(ProjectInception.ARGUMENTS);
-            commandLine.addAll(cmdArgs);
-            if(!cmdArgs.contains("--disableMultiplayer")) {
-                commandLine.add("--disableMultiplayer");
-            }
-        } else {
-            commandLine.add(ProjectInception.DEV_MAIN_CLASS);
-            commandLine.add("--disableMultiplayer");
-        }
-
         this.childQueue = ProjectInceptionEarlyRiser.buildQueue(
-                new File(MinecraftClient.getInstance().runDirectory, "projectInception" + File.separator + newInstancePrefix)
+                new File(MinecraftClient.getInstance().runDirectory, "projectInception" + File.separator + getNewInstanceQueueDirectory())
         );
         this.tailer = this.childQueue.createTailer("projectInceptionGameInstance").direction(TailerDirection.NONE);
         this.tailerThread = new Thread(this::tailerThread);
     }
 
+    protected abstract String getNewInstanceQueueDirectory();
+
     public void start() {
-        if(process == null || !process.isAlive()) {
-            try {
-                ProjectInception.LOGGER.log(Level.INFO, "Running command line: " + String.join(" ", commandLine));
-                process = new ProcessBuilder(commandLine).inheritIO().start();
-                this.tailerThread.start();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        this.tailerThread.start();
     }
 
-    public void stop(boolean async) {
+    public final void stop(boolean async) {
         Runnable stopFunc = () -> {
-            if(this.process != null && this.process.isAlive()) {
-                synchronized (processLock) {
-                    isProcessBeingKilled = true;
-                }
-                ProjectInception.LOGGER.log(Level.DEBUG, "Destroying game instance #" + this.instanceNumber);
-                this.process.destroy();
-                if(this.process.isAlive()) {
-                    try {
-                        Thread.sleep(5000);
-                    } catch (InterruptedException ignored) {}
-                    if (this.process.isAlive()) {
-                        this.process.destroyForcibly();
-                    }
-                }
-                this.process = null;
-                synchronized (processLock) {
-                    isProcessBeingKilled = false;
-                }
-            }
-
+            ProjectInception.LOGGER.log(Level.DEBUG, "Destroying game instance #" + this.instanceNumber);
+            stopInner();
             if(this.childQueue != null && !this.childQueue.isClosed()) {
                 this.childQueue.close();
             }
@@ -161,13 +121,15 @@ public class GameInstance {
         }
     }
 
+    protected void stopInner() {}
+
     private void tailerThread() {
         Thread.currentThread().setName("Game Instance Tailer " + instanceNumber);
         final AtomicBoolean isTextureUploading = new AtomicBoolean(false);
         final Object textureUploadLock = new Object();
         final ExcerptAppender appender = this.childQueue.acquireAppender();
         try {
-            while (process != null && process.isAlive()) {
+            while (isAlive()) {
                 synchronized (send2ChildLock) {
                     if (messages2ChildToSend.size() > 0) {
                         messages2ChildToSend.forEach((message) -> writeParent2ChildMessage(message, appender));
@@ -242,44 +204,41 @@ public class GameInstance {
     }
 
     private ByteBuffer getLastTexture() {
-        synchronized (processLock) {
-            if(isProcessBeingKilled) return null;
-            if (process == null || !process.isAlive()) return null;
+        if(!isAlive()) return null;
+        this.tailer.toEnd();
+        if (this.tailer.index() == 0) return texture;
+        if(!tailerStartIndex.isPresent()) {
+            tailerStartIndex = OptionalLong.of(this.tailer.toStart().index());
             this.tailer.toEnd();
-            if (this.tailer.index() == 0) return texture;
-            if(!tailerStartIndex.isPresent()) {
-                tailerStartIndex = OptionalLong.of(this.tailer.toStart().index());
-                this.tailer.toEnd();
-            }
-            byte tries = 0; // Prevent softlocking in case the child instance is lagging
-            while(!QueueProtocol.peekMessageType(this.tailer).equals(QueueProtocol.MessageType.IMAGE)) {
-                tries++;
-                if(this.tailer.index() - 1 == tailerStartIndex.getAsLong() || tries > 8) return texture;
-                this.tailer.moveToIndex(this.tailer.index() - 1);
-            }
-            try (DocumentContext dc = this.tailer.readingDocument()) {
-                if (dc.isPresent()) {
-                    Bytes<?> bytes = dc.wire().bytes();
-                    if(bytes.readByte() != QueueProtocol.MessageType.IMAGE.header) throw new IllegalStateException();
-                    lastWidth = bytes.readInt();
-                    lastHeight = bytes.readInt();
-                    showCursor = bytes.readBoolean();
-                    if (texture != null) {
-                        texture.rewind();
-                    }
-                    if (texture == null || texture.capacity() < lastWidth * lastHeight * 4) {
-                        texture = BufferUtils.createByteBuffer(lastWidth * lastHeight * 4);
-                    }
-                    bytes.read(texture);
+        }
+        byte tries = 0; // Prevent softlocking in case the child instance is lagging
+        while(!QueueProtocol.peekMessageType(this.tailer).equals(QueueProtocol.MessageType.IMAGE)) {
+            tries++;
+            if(this.tailer.index() - 1 == tailerStartIndex.getAsLong() || tries > 8) return texture;
+            this.tailer.moveToIndex(this.tailer.index() - 1);
+        }
+        try (DocumentContext dc = this.tailer.readingDocument()) {
+            if (dc.isPresent()) {
+                Bytes<?> bytes = dc.wire().bytes();
+                if(bytes.readByte() != QueueProtocol.MessageType.IMAGE.header) throw new IllegalStateException();
+                lastWidth = bytes.readInt();
+                lastHeight = bytes.readInt();
+                showCursor = bytes.readBoolean();
+                if (texture != null) {
                     texture.rewind();
-                    for (int i = 0; i < texture.capacity(); i += 4) {
-                        // on the sending side alpha is zero, so
-                        // we make sure it gets set to 100% here
-                        texture.put(i + 3, (byte) 255);
-                    }
                 }
-                return texture;
+                if (texture == null || texture.capacity() < lastWidth * lastHeight * 4) {
+                    texture = BufferUtils.createByteBuffer(lastWidth * lastHeight * 4);
+                }
+                bytes.read(texture);
+                texture.rewind();
+                for (int i = 0; i < texture.capacity(); i += 4) {
+                    // on the sending side alpha is zero, so
+                    // we make sure it gets set to 100% here
+                    texture.put(i + 3, (byte) 255);
+                }
             }
+            return texture;
         }
     }
 
@@ -351,9 +310,7 @@ public class GameInstance {
         }
     }
 
-    public boolean isAlive() {
-        return process != null && process.isAlive();
-    }
+    public abstract boolean isAlive();
 
     public double getLastMouseX() {
         return lastMouseX;

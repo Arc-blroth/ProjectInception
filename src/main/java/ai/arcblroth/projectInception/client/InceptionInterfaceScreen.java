@@ -1,6 +1,6 @@
 package ai.arcblroth.projectInception.client;
 
-import ai.arcblroth.projectInception.mc.GameInstance;
+import ai.arcblroth.projectInception.client.mc.MinecraftGameInstance;
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.block.GameBlockEntity;
@@ -16,7 +16,7 @@ import static org.lwjgl.glfw.GLFW.*;
 public class InceptionInterfaceScreen extends Screen {
 
     private final GameBlockEntity blockEntity;
-    private final GameInstance gameInstance;
+    private final MinecraftGameInstance gameInstance;
     private long lastEscPressTime = 0;
 
     public InceptionInterfaceScreen(GameBlockEntity blockEntity) {

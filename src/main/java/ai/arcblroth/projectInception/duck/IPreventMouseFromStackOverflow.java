@@ -1,6 +1,6 @@
 package ai.arcblroth.projectInception.duck;
 
-import ai.arcblroth.projectInception.mc.QueueProtocol;
+import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 
 import java.util.List;
 

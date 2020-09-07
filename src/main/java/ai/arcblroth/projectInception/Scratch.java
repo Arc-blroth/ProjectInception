@@ -1,6 +1,6 @@
 package ai.arcblroth.projectInception;
 
-import ai.arcblroth.projectInception.mc.QueueProtocol;
+import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptTailer;

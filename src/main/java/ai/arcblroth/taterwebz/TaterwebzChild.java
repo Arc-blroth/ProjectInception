@@ -1,6 +1,5 @@
 package ai.arcblroth.taterwebz;
 
-import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.taterwebz.util.NotKnotClassLoader;
 import joptsimple.ArgumentAcceptingOptionSpec;
@@ -8,17 +7,12 @@ import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.jetbrains.annotations.Nullable;
-import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.*;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.ListIterator;
 
 public class TaterwebzChild {
 
@@ -56,7 +50,7 @@ public class TaterwebzChild {
         }
 
         OPTIONS.runDirectory = optionSet.valueOf(gameDirOption).getCanonicalFile();
-        OPTIONS.queueDirectory = new File(OPTIONS.runDirectory, "projectInception" + File.separator + ProjectInceptionEarlyRiser.BROWSER_PREFIX).getCanonicalFile();
+        OPTIONS.queueDirectory = new File(OPTIONS.runDirectory, "projectInception" + File.separator + ProjectInceptionEarlyRiser.TATERWEBZ_PREFIX).getCanonicalFile();
         ProjectInceptionEarlyRiser.initChronicleQueues(OPTIONS.queueDirectory);
 
         NotKnotClassLoader classLoader = new NotKnotClassLoader(TaterwebzChild.class.getClassLoader());

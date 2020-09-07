@@ -1,6 +1,6 @@
 package ai.arcblroth.projectInception.mixin;
 
-import ai.arcblroth.projectInception.mc.GameInstance;
+import ai.arcblroth.projectInception.client.AbstractGameInstance;
 import ai.arcblroth.projectInception.ProjectInception;
 import net.minecraft.server.MinecraftServer;
 import org.apache.logging.log4j.Level;
@@ -16,7 +16,7 @@ public class MixinMinecraftServer {
     private void stopGameInstancesOnServerStop(CallbackInfo ci) {
         ProjectInception.LOGGER.log(Level.INFO, "Destroying game instances on server stop");
         try {
-            GameInstance.stopAllGameInstances();
+            AbstractGameInstance.stopAllGameInstances();
         } catch (Exception e) {
             ProjectInception.LOGGER.log(Level.WARN, "Some instances may have not been destroyed: ", e);
         }
