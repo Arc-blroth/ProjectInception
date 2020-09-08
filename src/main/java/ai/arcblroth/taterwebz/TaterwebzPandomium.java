@@ -11,15 +11,19 @@ import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
 import org.cef.CefApp;
+import org.cef.CefSettings;
 import org.cef.browser.TaterwebzBrowser;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
+import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 import org.panda_lang.pandomium.Pandomium;
 import org.panda_lang.pandomium.settings.PandomiumSettings;
 import org.panda_lang.pandomium.settings.PandomiumSettingsBuilder;
 import org.panda_lang.pandomium.wrapper.PandomiumClient;
 
+import javax.swing.*;
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -50,7 +54,10 @@ public class TaterwebzPandomium extends Pandomium {
                 settingsBuilder.proxy(proxyAddr.getHostName(), proxyAddr.getPort());
             }
             settingsBuilder.loadAsync(false);
-            return settingsBuilder.build();
+            PandomiumSettings settings = settingsBuilder.build();
+            settings.getCefSettings().log_severity = CefSettings.LogSeverity.LOGSEVERITY_DISABLE;
+            settings.getCefSettings().windowless_rendering_enabled = true;
+            return settings;
         }).get());
         browsers = new TreeMap<>();
     }
@@ -77,6 +84,7 @@ public class TaterwebzPandomium extends Pandomium {
                 }
             });
         });
+
     }
 
     public void loop() {
@@ -121,6 +129,12 @@ public class TaterwebzPandomium extends Pandomium {
                         }
                     }
                 }
+
+                SwingUtilities.invokeAndWait(() -> {
+                    for (TaterwebzBrowser browser : browsers.values()) {
+                        browser.render();
+                    }
+                });
 
                 CefApp.getInstance().N_DoMessageLoopWork();
 

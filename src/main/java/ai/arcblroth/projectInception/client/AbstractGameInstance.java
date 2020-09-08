@@ -129,7 +129,7 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
         final Object textureUploadLock = new Object();
         final ExcerptAppender appender = this.childQueue.acquireAppender();
         try {
-            while (isAlive()) {
+            while (isAlive() && !this.childQueue.isClosed()) {
                 synchronized (send2ChildLock) {
                     if (messages2ChildToSend.size() > 0) {
                         messages2ChildToSend.forEach((message) -> writeParent2ChildMessage(message, appender));

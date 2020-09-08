@@ -79,7 +79,7 @@ public class TaterwebzBlockEntityRenderer extends BlockEntityRenderer<TaterwebzB
                 -height + 1, 1,
                 -1.01F,
                 0.0F, 1.0F,
-                0.0F, 1.0F,
+                1.0F, 0.0F,
                 light);
 
         //if(ProjectInception.focusedInstance == blockEntity.getGameInstance() && blockEntity.getGameInstance().shouldShowCursor()) {
