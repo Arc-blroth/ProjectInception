@@ -6,6 +6,7 @@ import ai.arcblroth.projectInception.block.GameMultiblock;
 import ai.arcblroth.projectInception.block.TaterwebzBlockEntity;
 import ai.arcblroth.projectInception.client.AbstractGameInstance;
 import ai.arcblroth.projectInception.client.mc.QueueProtocol;
+import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
 import net.openhft.chronicle.queue.ExcerptAppender;
 
 public class TaterwebzInstance extends AbstractGameInstance<TaterwebzBlockEntity> {
@@ -25,9 +26,13 @@ public class TaterwebzInstance extends AbstractGameInstance<TaterwebzBlockEntity
         QueueProtocol.RequestBrowserMessage rbMessage = new QueueProtocol.RequestBrowserMessage();
         rbMessage.createOrDestroy = true;
         rbMessage.uuid = instanceNumber;
-        rbMessage.width = multiblock.sizeX * ProjectInceptionEarlyRiser.DISPLAY_SCALE;
-        rbMessage.height = multiblock.sizeY * ProjectInceptionEarlyRiser.DISPLAY_SCALE;
+        rbMessage.width = multiblock.sizeX * ProjectInceptionConfig.TATERWEBZ_SCALE;
+        rbMessage.height = multiblock.sizeY * ProjectInceptionConfig.TATERWEBZ_SCALE;
         QueueProtocol.writeParent2ChildMessage(rbMessage, appender);
+        QueueProtocol.SetPageMessage spMessage = new QueueProtocol.SetPageMessage();
+        spMessage.action = QueueProtocol.SetPageMessage.ACTION_GOTO;
+        spMessage.url = ProjectInceptionConfig.TATERWEBZ_HOME_PAGE;
+        QueueProtocol.writeParent2ChildMessage(spMessage, this.childQueue.acquireAppender());
         super.start();
     }
 

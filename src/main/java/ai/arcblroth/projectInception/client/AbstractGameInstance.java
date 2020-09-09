@@ -127,6 +127,7 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
         Thread.currentThread().setName("Game Instance Tailer " + instanceNumber);
         final AtomicBoolean isTextureUploading = new AtomicBoolean(false);
         final Object textureUploadLock = new Object();
+        this.tailer.toEnd();
         final ExcerptAppender appender = this.childQueue.acquireAppender();
         try {
             while (isAlive() && !this.childQueue.isClosed()) {

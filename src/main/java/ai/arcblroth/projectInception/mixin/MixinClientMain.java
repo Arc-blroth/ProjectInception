@@ -1,5 +1,6 @@
 package ai.arcblroth.projectInception.mixin;
 
+import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
 import ai.arcblroth.projectInception.util.CyberDragonsUtil;
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
@@ -36,7 +37,7 @@ public class MixinClientMain {
         SharedConstants.getGameVersion();
 
         ProjectInceptionEarlyRiser.ARGUMENTS = Arrays.copyOf(args, args.length);
-        if(ProjectInceptionEarlyRiser.IS_INNER && ProjectInceptionEarlyRiser.USE_FAUX_INNER) {
+        if(ProjectInceptionEarlyRiser.IS_INNER && ProjectInceptionConfig.USE_FAUX_INNER) {
             try {
                 OptionParser optionParser = new OptionParser();
                 optionParser.allowsUnrecognizedOptions();

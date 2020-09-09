@@ -40,13 +40,18 @@ dependencies {
 
 	modImplementation "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
 	nest "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
-	modImplementation("com.github.A5b84:dark-loading-screen:v1.4.4") {
+	modApi("io.github.prospector:modmenu:${project.modmenu_version}")  {
+		exclude group: "net.fabricmc.fabric-api"
+	}
+	modApi("com.github.A5b84:dark-loading-screen:v1.4.4") {
 		exclude group: "net.fabricmc.fabric-api"
 		exclude group: "io.github.prospector", module: "modmenu"
 	}
-	modRuntime("com.github.A5b84:dark-loading-screen:v1.4.4") {
-		exclude group: "net.fabricmc.fabric-api"
-		exclude group: "io.github.prospector", module: "modmenu"
+	modApi("me.shedaniel.cloth:config-2:${project.cloth_config_version}") {
+		exclude(group: "net.fabricmc.fabric-api")
+	}
+	nest("me.shedaniel.cloth:config-2:${project.cloth_config_version}")  {
+		exclude(group: "net.fabricmc.fabric-api")
 	}
 
 	implementation "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
@@ -79,7 +84,7 @@ dependencies {
 	}
 }
 
-def getActualShadowedJars = {
+def getActualNestedJars = {
 	def specifiedDependencies = configurations.nest.dependencies.collect { it.name + "-" + it.version + ".jar" }
 	def result = configurations.nest.resolve()
 	result.removeIf { !specifiedDependencies.contains(it.name) }
@@ -98,7 +103,7 @@ processResources {
 		exclude "fabric.mod.json"
 	}
 
-	from(getActualShadowedJars) {
+	from(getActualNestedJars) {
 		into "META-INF/jars/"
 	}
 
@@ -145,8 +150,6 @@ shadowJar {
 	exclude 'java/**'
 	exclude 'org/intellij/**'
 	exclude 'org/jetbrains/**'
-
-	exclude "org/cef/browser/CefBrowser_N.class"
 }
 
 remapJar {
@@ -158,7 +161,7 @@ remapJar {
 task reshadowJar(type: Jar) {
 	dependsOn remapJar
 	from zipTree(remapJar.archiveFile.get())
-	from(getActualShadowedJars) {
+	from(getActualNestedJars) {
 		into "META-INF/jars/"
 	}
 }

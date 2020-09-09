@@ -72,6 +72,11 @@ import java.io.*;
  *         <code>int height</code><br>
  *     </li>
  *     <li>
+ *         {@link MessageType#SET_PAGE} | parent &rarr; child | only used for Taterwebz.<br>
+ *         <code>byte action // 0 to reload, 1 to go to a URL, 2 to go back, 3 to go forward</code><br>
+ *         <code>String url // only set if action is 1</code><br>
+ *     </li>
+ *     <li>
  *         {@link MessageType#OWO} | child &rarr; parent | notify parent process of crash.<br>
  *         <code>Throwable throwable</code><br>
  *         <code>String title</code><br>
@@ -92,7 +97,8 @@ public class QueueProtocol {
         KEYBOARD_CHAR(7),
         LOAD_PROGRESS(8),
         REQUEST_BROWSER(9),
-        OWO(10);
+        SET_PAGE(10),
+        OWO(11);
 
         public final byte header;
 
@@ -175,6 +181,17 @@ public class QueueProtocol {
         @Override public MessageType getMessageType() { return MessageType.REQUEST_BROWSER; }
     }
 
+    public static final class SetPageMessage extends Message {
+        public static final byte ACTION_RELOAD = 0;
+        public static final byte ACTION_GOTO = 1;
+        public static final byte ACTION_BACK = 2;
+        public static final byte ACTION_FORWARD = 3;
+
+        public byte action;
+        public String url;
+        @Override public MessageType getMessageType() { return MessageType.SET_PAGE; }
+    }
+
     public static final class OwoMessage extends Message implements Serializable {
         public Throwable throwable;
         public String title;
@@ -241,6 +258,12 @@ public class QueueProtocol {
                     b.writeInt(rbMessage.width);
                     b.writeInt(rbMessage.height);
                 }
+            } else if(message instanceof SetPageMessage) {
+                SetPageMessage spMessage = (SetPageMessage) message;
+                b.writeByte(spMessage.action);
+                if(spMessage.action == SetPageMessage.ACTION_GOTO) {
+                    b.writeUtf8(spMessage.url);
+                }
             }
         });
     }
@@ -293,6 +316,13 @@ public class QueueProtocol {
                 rbMessage.height = bytes.readInt();
             }
             return rbMessage;
+        } else if(messageType.equals(MessageType.SET_PAGE)) {
+            SetPageMessage spMessage = new SetPageMessage();
+            spMessage.action = bytes.readByte();
+            if(spMessage.action == SetPageMessage.ACTION_GOTO) {
+                spMessage.url = bytes.readUtf8();
+            }
+            return spMessage;
         } else {
             throw new RuntimeException("Why did you add something to my enum!?");
         }

@@ -119,7 +119,7 @@ public class TaterwebzPandomium extends Pandomium {
 
                 for(RequestBrowserMessage rbMessage : browserRequests) {
                     if(rbMessage.createOrDestroy) {
-                        browsers.put(rbMessage.uuid, createBrowser("https://google.com/", rbMessage.width, rbMessage.height, rbMessage.uuid));
+                        browsers.put(rbMessage.uuid, createBrowser("about:blank", rbMessage.width, rbMessage.height, rbMessage.uuid));
                     } else {
                         TaterwebzBrowser browser = browsers.remove(rbMessage.uuid);
                         if(browser != null) {
@@ -132,6 +132,7 @@ public class TaterwebzPandomium extends Pandomium {
 
                 SwingUtilities.invokeAndWait(() -> {
                     for (TaterwebzBrowser browser : browsers.values()) {
+                        browser.handleEvents();
                         browser.render();
                     }
                 });
@@ -140,12 +141,13 @@ public class TaterwebzPandomium extends Pandomium {
 
                 Thread.sleep(1000 / 60);
             }
-            //CefApp.getInstance().N_Shutdown();
         } catch (Throwable e) {
             QueueProtocol.OwoMessage crash = new QueueProtocol.OwoMessage();
             crash.throwable = e;
             QueueProtocol.writeChild2ParentMessage(crash, ProjectInception.toParentQueue.acquireAppender());
             throw new RuntimeException(e);
+        } finally {
+            CefApp.getInstance().shutdown();
         }
     }
 

@@ -5,6 +5,7 @@ import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.block.GameBlockEntity;
 import ai.arcblroth.projectInception.block.GameMultiblock;
+import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
 import net.fabricmc.loader.api.FabricLoader;
 import org.apache.logging.log4j.Level;
 
@@ -30,10 +31,27 @@ public class MinecraftGameInstance extends AbstractGameInstance<GameBlockEntity>
         String newInstancePrefix = ProjectInceptionEarlyRiser.INSTANCE_PREFIX + "-" + instanceNumber;
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_IS_INNER + "=true");
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_WIDTH
-                + "=" + (multiblock.sizeX * ProjectInceptionEarlyRiser.DISPLAY_SCALE));
+                + "=" + (multiblock.sizeX * ProjectInceptionConfig.DISPLAY_SCALE));
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_HEIGHT
-                + "=" + (multiblock.sizeY * ProjectInceptionEarlyRiser.DISPLAY_SCALE));
+                + "=" + (multiblock.sizeY * ProjectInceptionConfig.DISPLAY_SCALE));
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_INSTANCE_PREFIX + "=" + newInstancePrefix);
+        if(!ProjectInceptionConfig.INCEPTION_EXTRA_VM_ARGS.isEmpty()) {
+            StringBuilder buffer = new StringBuilder();
+            for(String argFragment : ProjectInceptionConfig.INCEPTION_EXTRA_VM_ARGS.split(" ")) {
+                if(argFragment.startsWith("-")) {
+                    String builtBuffer = buffer.toString();
+                    if(!builtBuffer.isEmpty()) {
+                        commandLine.add(builtBuffer.trim());
+                    }
+                    buffer.setLength(0);
+                }
+                buffer.append(argFragment).append(" ");
+            }
+            String builtBuffer = buffer.toString();
+            if(!builtBuffer.isEmpty()) {
+                commandLine.add(builtBuffer.trim());
+            }
+        }
         if(!FabricLoader.getInstance().isDevelopmentEnvironment()) {
             commandLine.add(ProjectInception.MAIN_CLASS);
             List<String> cmdArgs = Arrays.asList(ProjectInception.ARGUMENTS);

@@ -18,5 +18,19 @@
   "message.project_inception.splash8": "Warning: continued usage of Project Inception may cause loss of sanity",
 
   "key.categories.project_inception": "Project Inception",
-  "key.project_inception.exit_inner_lock": "Exit Inner Game Input Lock"
+  "key.project_inception.exit_inner_lock": "Exit Inner Game Input Lock",
+
+  "config.projectInception.title": "Project Inception Config",
+  "config.projectInception.category.inception": "Inception",
+  "config.projectInception.category.taterwebz": "Taterwebz",
+  "config.projectInception.inception.dpi": "Inception Game Display Scale",
+  "config.projectInception.inception.dpi.tooltip": "The pixels per block that inception displays render at.",
+  "config.projectInception.inception.extra_vm_args": "Extra Java VM Arguments",
+  "config.projectInception.inception.extra_vm_args.tooltip": "Appended to the command line of inception instances.",
+  "config.projectInception.inception.use_faux_inner": "ADVANCED: Use Faux Inner",
+  "config.projectInception.inception.use_faux_inner.tooltip": "For developers: this makes the child process not actually init Minecraft so that I can test things without destroying my computer ;)",
+  "config.projectInception.taterwebz.dpi": "Taterwebz Display Scale",
+  "config.projectInception.taterwebz.dpi.tooltip": "The pixels per block that taterwebz browsers render at.",
+  "config.projectInception.taterwebz.home_page": "Taterwebz Home Page",
+  "config.projectInception.taterwebz.home_page.tooltip": "The home page for new taterwebz browsers."
 }

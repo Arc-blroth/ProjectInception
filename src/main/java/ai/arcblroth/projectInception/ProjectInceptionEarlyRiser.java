@@ -1,5 +1,6 @@
 package ai.arcblroth.projectInception;
 
+import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
 import com.chocohead.mm.api.ClassTinkerers;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.crash.CrashException;
@@ -29,12 +30,6 @@ public class ProjectInceptionEarlyRiser implements Runnable {
     public static final String ARG_DISPLAY_HEIGHT;
     public static final String ARG_INSTANCE_PREFIX;
     public static final String ARG_BROWSER_PREFIX;
-
-    public static final int DISPLAY_SCALE = 64;
-
-    // This make the child process not actually init Minecraft
-    // so that I can test things without destroying my computer
-    public static final boolean USE_FAUX_INNER = true;
 
     public static final Logger LOGGER = LogManager.getLogger("ProjectInception");
     public static final boolean IS_INNER;
@@ -93,6 +88,8 @@ public class ProjectInceptionEarlyRiser implements Runnable {
         } else {
             LOGGER.log(Level.INFO, "Initializing for parent instance...");
         }
+        ProjectInceptionConfig.load();
+        ProjectInceptionConfig.save();
         if(IS_INNER) {
             // Force the window to not appear
             final String windowClassName = FabricLoader.getInstance().isDevelopmentEnvironment()

@@ -29,6 +29,9 @@
     ],
     "project_inception:postLaunch": [
       "ai.arcblroth.projectInception.client.taterwebz.CEFInitializer"
+    ],
+    "modmenu": [
+      "ai.arcblroth.projectInception.config.ProjectInceptionConfigScreen"
     ]
   },
 

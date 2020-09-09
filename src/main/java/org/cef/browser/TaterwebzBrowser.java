@@ -3,9 +3,12 @@ package org.cef.browser;
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import ai.arcblroth.taterwebz.TaterwebzPandomium;
+import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.core.Jvm;
 import net.openhft.chronicle.core.UnsafeMemory;
 import net.openhft.chronicle.queue.ChronicleQueue;
+import net.openhft.chronicle.queue.ExcerptTailer;
+import net.openhft.chronicle.wire.DocumentContext;
 import org.cef.CefApp;
 import org.cef.CefClient;
 import org.cef.callback.CefDragData;
@@ -20,6 +23,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.nio.ByteBuffer;
 
+import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
+
 public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
 
     public GLAutoDrawable canvas_;
@@ -31,6 +36,7 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
     private boolean isInitYet = false;
 
     private final ChronicleQueue queue;
+    private final ExcerptTailer tailer;
 
     public TaterwebzBrowser(CefClient cefClient, String url, boolean transparent, int width, int height, CefRequestContext cefRequestContext, ChronicleQueue queue) {
         this(cefClient, url, transparent, width, height, cefRequestContext, queue, null, null);
@@ -50,6 +56,7 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
         browser_rect_.setBounds(0, 0, width, height);
 
         this.queue = queue;
+        this.tailer = this.queue.createTailer();
     }
 
     private void createGLCanvas() {
@@ -107,6 +114,42 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
 
     public CefRenderHandler getRenderHandler() {
         return this;
+    }
+
+    public void handleEvents() {
+        while(true) {
+            try(DocumentContext dc = tailer.readingDocument()) {
+                if(dc.isPresent()) {
+                    Bytes<?> bytes = dc.wire().bytes();
+                    Message message = readParent2ChildMessage(bytes);
+                    MessageType type = message.getMessageType();
+                    if(type.equals(MessageType.SET_PAGE)) {
+                        SetPageMessage spMessage = (SetPageMessage) message;
+                        switch (spMessage.action) {
+                            case SetPageMessage.ACTION_RELOAD: {
+                                reload();
+                                break;
+                            }
+                            case SetPageMessage.ACTION_GOTO: {
+                                loadURL(spMessage.url);
+                                break;
+                            }
+                            case SetPageMessage.ACTION_BACK: {
+                                if(canGoBack()) goBack();
+                                break;
+                            }
+                            case SetPageMessage.ACTION_FORWARD: {
+                                if(canGoForward()) goForward();
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    dc.rollbackOnClose();
+                    break;
+                }
+            }
+        }
     }
 
     public void render() {

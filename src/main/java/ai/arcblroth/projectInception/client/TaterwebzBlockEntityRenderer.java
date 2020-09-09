@@ -58,9 +58,6 @@ public class TaterwebzBlockEntityRenderer extends BlockEntityRenderer<TaterwebzB
 
     private void renderInner(TaterwebzBlockEntity blockEntity, MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light) {
         Identifier textureId = blockEntity.getTaterwebzInstance().getLastTextureId();
-        VertexConsumer vertexConsumer = textureId != null
-                ? vertexConsumers.getBuffer(RenderLayer.getText(textureId))
-                : GENERIC.getVertexConsumer(vertexConsumers, RenderLayer::getText);
 
         Direction direction = blockEntity.getCachedState().get(GameBlock.FACING);
         matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-direction.asRotation()));
@@ -74,13 +71,24 @@ public class TaterwebzBlockEntityRenderer extends BlockEntityRenderer<TaterwebzB
         int width = blockEntity.getSizeX();
         int height = blockEntity.getSizeY();
 
-        renderQuads(vertexConsumer, matrix4f,
-                -width + 1, 1,
-                -height + 1, 1,
-                -1.01F,
-                0.0F, 1.0F,
-                1.0F, 0.0F,
-                light);
+        if(textureId != null) {
+            renderQuads(vertexConsumers.getBuffer(RenderLayer.getText(textureId)), matrix4f,
+                    -width + 1, 1,
+                    -height + 1, 1,
+                    -1.01F,
+                    0.0F, 1.0F,
+                    1.0F, 0.0F,
+                    light);
+        } else {
+            Sprite sprite = GENERIC.getSprite();
+            renderQuads(GENERIC.getVertexConsumer(vertexConsumers, RenderLayer::getText), matrix4f,
+                    -width + 1, 1,
+                    -height + 1, 1,
+                    -1.01F,
+                    sprite.getMinU(), sprite.getMaxU(),
+                    sprite.getMaxV(), sprite.getMinV(),
+                    light);
+        }
 
         //if(ProjectInception.focusedInstance == blockEntity.getGameInstance() && blockEntity.getGameInstance().shouldShowCursor()) {
         //    VertexConsumer ptVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getText(pointerSprite.getAtlas().getId()));
