@@ -137,6 +137,7 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
                         messages2ChildToSend.clear();
                     }
                 }
+                tailerLoopInner();
                 boolean previousShowCursor = showCursor;
                 this.texture = getLastTexture();
                 if (this.textureId == null) {
@@ -203,6 +204,8 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
             });
         }
     }
+
+    protected void tailerLoopInner() {}
 
     private ByteBuffer getLastTexture() {
         if(!isAlive()) return null;

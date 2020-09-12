@@ -7,12 +7,22 @@ import ai.arcblroth.projectInception.block.TaterwebzBlockEntity;
 import ai.arcblroth.projectInception.client.AbstractGameInstance;
 import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
+import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.queue.ExcerptAppender;
+import net.openhft.chronicle.queue.ExcerptTailer;
+import net.openhft.chronicle.queue.TailerDirection;
+import net.openhft.chronicle.wire.DocumentContext;
+
+import static ai.arcblroth.projectInception.client.mc.QueueProtocol.readParent2ChildMessage;
 
 public class TaterwebzInstance extends AbstractGameInstance<TaterwebzBlockEntity> {
 
+    private final ExcerptTailer secondTailer;
+    private String lastURL = "about:blank";
+
     public TaterwebzInstance(GameMultiblock<TaterwebzBlockEntity> multiblock) {
         super(multiblock);
+        this.secondTailer = this.childQueue.createTailer("URL Change Tailer").direction(TailerDirection.FORWARD);
     }
 
     @Override
@@ -48,6 +58,59 @@ public class TaterwebzInstance extends AbstractGameInstance<TaterwebzBlockEntity
     @Override
     public boolean isAlive() {
         return ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS.isAlive();
+    }
+
+    @Override
+    protected void tailerLoopInner() {
+        while (true) {
+            try(DocumentContext dc = secondTailer.readingDocument()) {
+                if(dc.isPresent()) {
+                    Bytes<?> bytes = dc.wire().bytes();
+                    // SET_PAGE messages are implemented in parent2child, but
+                    // are sent from both sides.
+                    QueueProtocol.Message message = readParent2ChildMessage(bytes);
+                    QueueProtocol.MessageType type = message.getMessageType();
+                    if(type == QueueProtocol.MessageType.SET_PAGE) {
+                        QueueProtocol.SetPageMessage spMessage = (QueueProtocol.SetPageMessage) message;
+                        if(spMessage.action == QueueProtocol.SetPageMessage.ACTION_GOTO) {
+                            lastURL = spMessage.url;
+                        }
+                    }
+                } else {
+                    dc.rollbackOnClose();
+                    break;
+                }
+            }
+        }
+    }
+
+    public void gotoUrl(String url) {
+        QueueProtocol.SetPageMessage spMessage = new QueueProtocol.SetPageMessage();
+        spMessage.action = QueueProtocol.SetPageMessage.ACTION_GOTO;
+        spMessage.url = url;
+        QueueProtocol.writeParent2ChildMessage(spMessage, this.childQueue.acquireAppender());
+    }
+
+    public void goBack() {
+        QueueProtocol.SetPageMessage spMessage = new QueueProtocol.SetPageMessage();
+        spMessage.action = QueueProtocol.SetPageMessage.ACTION_BACK;
+        QueueProtocol.writeParent2ChildMessage(spMessage, this.childQueue.acquireAppender());
+    }
+
+    public void goForward() {
+        QueueProtocol.SetPageMessage spMessage = new QueueProtocol.SetPageMessage();
+        spMessage.action = QueueProtocol.SetPageMessage.ACTION_FORWARD;
+        QueueProtocol.writeParent2ChildMessage(spMessage, this.childQueue.acquireAppender());
+    }
+
+    public void reload() {
+        QueueProtocol.SetPageMessage spMessage = new QueueProtocol.SetPageMessage();
+        spMessage.action = QueueProtocol.SetPageMessage.ACTION_RELOAD;
+        QueueProtocol.writeParent2ChildMessage(spMessage, this.childQueue.acquireAppender());
+    }
+
+    public String getCurrentURL() {
+        return lastURL;
     }
 
 }

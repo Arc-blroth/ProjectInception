@@ -2,6 +2,7 @@ package org.cef.browser;
 
 import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import ai.arcblroth.taterwebz.util.GLFW2SwingKeyHandler;
+import com.google.common.collect.Lists;
 import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptTailer;
@@ -21,6 +22,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 
 import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
 
@@ -42,7 +44,6 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
         }
     }
 
-
     public GLAutoDrawable canvas_;
     public long window_handle_;
     public Rectangle browser_rect_;
@@ -62,12 +63,15 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
     private double dragStartY = 0.5;
     private int lastModifiers = 0;
 
+    private String lastURL;
+
     public TaterwebzBrowser(CefClient cefClient, String url, boolean transparent, int width, int height, CefRequestContext cefRequestContext, ChronicleQueue queue) {
         this(cefClient, url, transparent, width, height, cefRequestContext, queue, null, null);
     }
 
     public TaterwebzBrowser(CefClient cefClient, String url, boolean transparent, int width, int height, CefRequestContext cefRequestContext, ChronicleQueue queue, CefBrowserOsr cefBrowserOsr, Point point) {
         super(cefClient, url, cefRequestContext, cefBrowserOsr, point);
+        this.lastURL = url_;
         this.window_handle_ = 0L;
         this.browser_rect_ = new Rectangle(0, 0, width, height);
         this.screenPoint_ = new Point(0, 0);
@@ -204,6 +208,13 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
                     break;
                 }
             }
+        }
+        if(!url_.equals(lastURL)) {
+            lastURL = url_;
+            SetPageMessage spMessage = new SetPageMessage();
+            spMessage.action = SetPageMessage.ACTION_GOTO;
+            spMessage.url = lastURL;
+            QueueProtocol.writeParent2ChildMessage(spMessage, queue.acquireAppender());
         }
     }
 
@@ -367,6 +378,21 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
     }
 
     @Override
+    public void setFocus(boolean b) {
+        // For reasons beyond our understanding, JCEF
+        // will call CefClient.onGetFocus in native
+        // code, leading to a stack overflow
+        // see https://discordapp.com/channels/507304429255393322/608088354042544139/754429396827242557
+        Throwable stackTraceGetter = new Throwable();
+        ArrayList<StackTraceElement> stackTrace = Lists.newArrayList(stackTraceGetter.getStackTrace());
+        if(stackTrace.stream()
+                .filter(ste -> ste.getClassName().equals(TaterwebzBrowser.class.getName()) && ste.getMethodName().equals("setFocus"))
+                .count() < 2) {
+            super.setFocus(b);
+        }
+    }
+
+    @Override
     public Rectangle getViewRect(CefBrowser var1) {
         return this.browser_rect_;
     }
@@ -398,6 +424,10 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
     @Override
     public Component getUIComponent() {
         return this.fauxComponent;
+    }
+
+    public ChronicleQueue getQueue() {
+        return queue;
     }
 
     public void dispose() {

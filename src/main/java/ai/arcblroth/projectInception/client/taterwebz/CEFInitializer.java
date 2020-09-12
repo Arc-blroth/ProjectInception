@@ -13,6 +13,7 @@ import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptTailer;
+import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
 
 import java.io.File;
@@ -43,14 +44,13 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                     new File(MinecraftClient.getInstance().runDirectory, "projectInception" + File.separator + ProjectInceptionEarlyRiser.TATERWEBZ_PREFIX)
             );
             ProjectInceptionClient.TATERWEBZ_CHILD_QUEUE = childQueue;
-            ExcerptTailer tailer = childQueue.createTailer("postlaunch");
+            ExcerptTailer tailer = childQueue.createTailer("postlaunch").direction(TailerDirection.FORWARD);
             tailer.toEnd();
             final int framerateLimit = MinecraftClient.getInstance().getWindow().getFramerateLimit();
             OwoMessage crash = null;
             waitForInit:
             while(ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS.isAlive()) {
-                boolean reachedEndYet = false;
-                while(!reachedEndYet) {
+                while(true) {
                     try (DocumentContext dc = tailer.readingDocument()) {
                         if (dc.isPresent()) {
                             Message message = readChild2ParentMessage(dc.wire().bytes());
@@ -67,11 +67,8 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                             }
                         } else {
                             dc.rollbackOnClose();
-                            reachedEndYet = true;
+                            break;
                         }
-                    }
-                    if(!reachedEndYet) {
-                        tailer.moveToIndex(tailer.index() + 1);
                     }
                 }
                 if (framerateLimit != 0) {

@@ -72,7 +72,7 @@ import java.io.*;
  *         <code>int height</code><br>
  *     </li>
  *     <li>
- *         {@link MessageType#SET_PAGE} | parent &rarr; child | only used for Taterwebz.<br>
+ *         {@link MessageType#SET_PAGE} | parent &#8596; child, implemented in send/readParent2Child only | only used for Taterwebz.<br>
  *         <code>byte action // 0 to reload, 1 to go to a URL, 2 to go back, 3 to go forward</code><br>
  *         <code>String url // only set if action is 1</code><br>
  *     </li>

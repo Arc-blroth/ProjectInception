@@ -97,6 +97,7 @@ public class TaterwebzPandomium extends Pandomium {
                 cefMenuModel.clear();
             }
         });
+
     }
 
     public void loop() {
@@ -104,16 +105,16 @@ public class TaterwebzPandomium extends Pandomium {
         tailer.toEnd();
         ArrayList<RequestBrowserMessage> browserRequests = new ArrayList<>();
 
-        //RequestBrowserMessage test = new RequestBrowserMessage();
-        //test.createOrDestroy = true;
-        //test.width = 256;
-        //test.height = 256;
-        //QueueProtocol.writeParent2ChildMessage(test, ProjectInception.toParentQueue.acquireAppender());
+        RequestBrowserMessage test = new RequestBrowserMessage();
+        test.createOrDestroy = true;
+        test.width = 256;
+        test.height = 256;
+        QueueProtocol.writeParent2ChildMessage(test, ProjectInception.toParentQueue.acquireAppender());
 
-        CefBrowser browser2 = PANDOMIUM_CLIENT.getCefClient().createBrowser("https://google.com/", true, true);
-        JFrame frame = new JFrame();
-        frame.add(browser2.getUIComponent());
-        frame.setVisible(true);
+        //CefBrowser browser2 = PANDOMIUM_CLIENT.getCefClient().createBrowser("https://google.com/", true, true);
+        //JFrame frame = new JFrame();
+        //frame.add(browser2.getUIComponent());
+        //frame.setVisible(true);
 
         try {
             while(true) {
@@ -148,9 +149,13 @@ public class TaterwebzPandomium extends Pandomium {
                 }
 
                 SwingUtilities.invokeAndWait(() -> {
-                    for (TaterwebzBrowser browser : browsers.values()) {
-                        browser.handleEvents();
-                        browser.render();
+                    try {
+                        for (TaterwebzBrowser browser : browsers.values()) {
+                            browser.handleEvents();
+                            browser.render();
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
                 });
 
