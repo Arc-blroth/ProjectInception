@@ -209,8 +209,8 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
                 }
             }
         }
-        if(!url_.equals(lastURL)) {
-            lastURL = url_;
+        if(!getMainFrame().getURL().equals(lastURL)) {
+            lastURL = getMainFrame().getURL();
             SetPageMessage spMessage = new SetPageMessage();
             spMessage.action = SetPageMessage.ACTION_GOTO;
             spMessage.url = lastURL;

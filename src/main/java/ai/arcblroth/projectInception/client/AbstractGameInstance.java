@@ -18,10 +18,12 @@ import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
 import org.lwjgl.BufferUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.OptionalLong;
@@ -93,9 +95,16 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
         }
 
         this.multiblock = multiblock;
-        this.childQueue = ProjectInceptionEarlyRiser.buildQueue(
-                new File(MinecraftClient.getInstance().runDirectory, "projectInception" + File.separator + getNewInstanceQueueDirectory())
-        );
+
+        File childQueueDir = new File(MinecraftClient.getInstance().runDirectory, "projectInception" + File.separator + getNewInstanceQueueDirectory());
+        if(childQueueDir.exists() && childQueueDir.isDirectory()) {
+            try {
+                FileUtils.deleteDirectory(childQueueDir);
+            } catch (IOException e) {
+                ProjectInception.LOGGER.warn("Couldn't delete existing child queue directory. Things might not work.", e);
+            }
+        }
+        this.childQueue = ProjectInceptionEarlyRiser.buildQueue(childQueueDir);
         this.tailer = this.childQueue.createTailer("projectInceptionGameInstance").direction(TailerDirection.NONE);
         this.tailerThread = new Thread(this::tailerThread);
     }
