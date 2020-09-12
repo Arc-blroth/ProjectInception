@@ -7,11 +7,12 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.function.Consumer;
 
@@ -21,7 +22,7 @@ public class NotKnotClassLoader extends URLClassLoader {
         registerAsParallelCapable();
     }
 
-    private final Method findLoadedClass;
+    private final MethodHandle findLoadedClass;
     private HashMap<String, Consumer<ClassNode>> transformers;
 
     public NotKnotClassLoader(ClassLoader parent) {
@@ -29,9 +30,10 @@ public class NotKnotClassLoader extends URLClassLoader {
         transformers = new HashMap<>();
 
         try {
-            findLoadedClass = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
-            findLoadedClass.setAccessible(true);
-        } catch (NoSuchMethodException e) {
+            Method findLoadedClassMethod = ClassLoader.class.getDeclaredMethod("findLoadedClass", String.class);
+            findLoadedClassMethod.setAccessible(true);
+            findLoadedClass = MethodHandles.lookup().unreflect(findLoadedClassMethod);
+        } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
     }
@@ -58,7 +60,11 @@ public class NotKnotClassLoader extends URLClassLoader {
                             // if not found
                         }
                     }
-                } catch (IllegalAccessException | InvocationTargetException ignored) {}
+                } catch (IllegalAccessException | InvocationTargetException ignored) {
+
+                } catch (Throwable t) {
+                    throw new RuntimeException(t);
+                }
 
                 if (c == null) {
                     return super.loadClass(name, resolve);

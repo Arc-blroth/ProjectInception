@@ -1,8 +1,8 @@
 package ai.arcblroth.projectInception.client;
 
 import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.block.GameBlock;
-import ai.arcblroth.projectInception.block.GameBlockEntity;
 import ai.arcblroth.projectInception.block.TaterwebzBlockEntity;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
@@ -50,14 +50,14 @@ public class TaterwebzBlockEntityRenderer extends BlockEntityRenderer<TaterwebzB
                 state, pos, matrixStack, vertexConsumer,
                 false, new Random(), state.getRenderingSeed(pos),
                 OverlayTexture.DEFAULT_UV);
-        if(blockEntity.isController() && blockEntity.isOn() && blockEntity.getTaterwebzInstance() != null) {
+        if(blockEntity.isController() && blockEntity.isOn() && blockEntity.getGameInstance() != null) {
             renderInner(blockEntity, matrixStack, vertexConsumers, light);
         }
         matrixStack.pop();
     }
 
     private void renderInner(TaterwebzBlockEntity blockEntity, MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light) {
-        Identifier textureId = blockEntity.getTaterwebzInstance().getLastTextureId();
+        Identifier textureId = blockEntity.getGameInstance().getLastTextureId();
 
         Direction direction = blockEntity.getCachedState().get(GameBlock.FACING);
         matrixStack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-direction.asRotation()));
@@ -90,18 +90,18 @@ public class TaterwebzBlockEntityRenderer extends BlockEntityRenderer<TaterwebzB
                     light);
         }
 
-        //if(ProjectInception.focusedInstance == blockEntity.getGameInstance() && blockEntity.getGameInstance().shouldShowCursor()) {
-        //    VertexConsumer ptVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getText(pointerSprite.getAtlas().getId()));
-        //    float left = 1F - (float) blockEntity.getGameInstance().getLastMouseX();
-        //    float top = 1F - (float) blockEntity.getGameInstance().getLastMouseY();
-        //    renderQuads(ptVertexConsumer, matrix4f,
-        //            -width + 1 + left * width - 0.1875F, -width + 1 + left * width,
-        //            -height + 1 + top * height - 0.25F, -height + 1 + top * height,
-        //            -1.015F,
-        //            pointerSprite.getMinU() + (pointerSprite.getMaxU() - pointerSprite.getMinU()) / 4, pointerSprite.getMaxU(),
-        //            pointerSprite.getMaxV(), pointerSprite.getMinV(),
-        //            light);
-        //}
+        if(ProjectInceptionClient.focusedInstance == blockEntity.getGameInstance() && blockEntity.getGameInstance().shouldShowCursor()) {
+            VertexConsumer ptVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getText(pointerSprite.getAtlas().getId()));
+            float left = 1F - (float) blockEntity.getGameInstance().getLastMouseX();
+            float top = 1F - (float) blockEntity.getGameInstance().getLastMouseY();
+            renderQuads(ptVertexConsumer, matrix4f,
+                    -width + 1 + left * width - 0.1875F, -width + 1 + left * width,
+                    -height + 1 + top * height - 0.25F, -height + 1 + top * height,
+                    -1.015F,
+                    pointerSprite.getMinU() + (pointerSprite.getMaxU() - pointerSprite.getMinU()) / 4, pointerSprite.getMaxU(),
+                    pointerSprite.getMaxV(), pointerSprite.getMinV(),
+                    light);
+        }
     }
 
     private void renderQuads(VertexConsumer vertexConsumer, Matrix4f matrix4f, float minX, float maxX, float minY, float maxY, float z, float minU, float maxU, float minV, float maxV, int light) {

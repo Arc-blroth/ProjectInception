@@ -1,7 +1,7 @@
 package ai.arcblroth.projectInception.block;
 
-import ai.arcblroth.projectInception.client.mc.MinecraftGameInstance;
 import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.client.mc.MinecraftGameInstance;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.server.world.ServerWorld;
@@ -57,6 +57,7 @@ public class GameBlockEntity extends AbstractDisplayBlockEntity<GameBlockEntity>
         }
     }
 
+    @Override
     public MinecraftGameInstance getGameInstance() {
         return gameInstance;
     }

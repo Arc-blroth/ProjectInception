@@ -3,6 +3,7 @@ package ai.arcblroth.projectInception.client.taterwebz;
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
+import ai.arcblroth.projectInception.client.AbstractGameInstance;
 import ai.arcblroth.projectInception.postlaunch.PostLaunchEntrypoint;
 import ai.arcblroth.projectInception.postlaunch.ProgressBar;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -108,6 +109,7 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                     throw new CrashException(crashReport);
                 });
             }
+            AbstractGameInstance.registerShutdownHook();
         } catch (Throwable e) {
             bar.setProgress(1);
             e.printStackTrace();

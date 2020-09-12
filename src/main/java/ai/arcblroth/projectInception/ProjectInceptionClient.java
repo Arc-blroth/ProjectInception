@@ -1,21 +1,23 @@
 package ai.arcblroth.projectInception;
 
+import ai.arcblroth.projectInception.client.AbstractGameInstance;
 import ai.arcblroth.projectInception.client.GameBlockEntityRenderer;
 import ai.arcblroth.projectInception.client.TaterwebzBlockEntityRenderer;
-import ai.arcblroth.taterwebz.TaterwebzPandomium;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendereregistry.v1.BlockEntityRendererRegistry;
 import net.minecraft.client.options.KeyBinding;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import org.lwjgl.glfw.GLFW;
-import org.panda_lang.pandomium.wrapper.PandomiumClient;
 
 public class ProjectInceptionClient implements ClientModInitializer {
 
     public static KeyBinding EXIT_INNER_LOCK;
+
     public static Process TATERWEBZ_CHILD_PROCESS;
     public static ChronicleQueue TATERWEBZ_CHILD_QUEUE;
+
+    public static AbstractGameInstance<?> focusedInstance = null;
 
     @Override
     public void onInitializeClient() {

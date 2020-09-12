@@ -243,8 +243,9 @@ public class QueueProtocol {
                 b.writeDouble(mpMessage.y);
             } else if(message instanceof KeyboardKeyMessage) {
                 KeyboardKeyMessage keMessage = (KeyboardKeyMessage) message;
-                b.writeInt(keMessage.action);
                 b.writeInt(keMessage.key);
+                b.writeInt(keMessage.scancode);
+                b.writeInt(keMessage.action);
                 b.writeInt(keMessage.mods);
             } else if(message instanceof KeyboardCharMessage) {
                 KeyboardCharMessage kcMessage = (KeyboardCharMessage) message;
@@ -298,8 +299,9 @@ public class QueueProtocol {
             return mpMessage;
         } else if(messageType.equals(MessageType.KEYBOARD_KEY)) {
             KeyboardKeyMessage keMessage = new KeyboardKeyMessage();
-            keMessage.action = bytes.readInt();
             keMessage.key = bytes.readInt();
+            keMessage.scancode = bytes.readInt();
+            keMessage.action = bytes.readInt();
             keMessage.mods = bytes.readInt();
             return keMessage;
         } else if(messageType.equals(MessageType.KEYBOARD_CHAR)) {

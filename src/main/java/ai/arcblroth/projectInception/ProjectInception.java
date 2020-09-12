@@ -3,7 +3,6 @@ package ai.arcblroth.projectInception;
 import ai.arcblroth.projectInception.block.*;
 import ai.arcblroth.projectInception.item.BlockItemWithMagicness;
 import ai.arcblroth.projectInception.item.InceptionInterfaceItem;
-import ai.arcblroth.projectInception.client.mc.MinecraftGameInstance;
 import ai.arcblroth.projectInception.util.RecipeYeeter;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.client.itemgroup.FabricItemGroupBuilder;
@@ -32,7 +31,6 @@ public class ProjectInception implements ModInitializer {
 	public static final String DEV_MAIN_CLASS = "net.fabricmc.devlaunchinjector.Main";
 
 	public static ChronicleQueue toParentQueue = null;
-	public static MinecraftGameInstance focusedInstance = null;
 
 	public static ItemGroup STUFF;
 

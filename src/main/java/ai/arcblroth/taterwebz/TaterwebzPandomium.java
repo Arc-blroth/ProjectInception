@@ -1,7 +1,6 @@
 package ai.arcblroth.taterwebz;
 
 import ai.arcblroth.projectInception.ProjectInception;
-import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import ai.arcblroth.taterwebz.util.NotKnotClassLoader;
@@ -12,11 +11,14 @@ import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
 import org.cef.CefApp;
 import org.cef.CefSettings;
+import org.cef.browser.CefBrowser;
+import org.cef.browser.CefFrame;
 import org.cef.browser.TaterwebzBrowser;
-import org.objectweb.asm.Opcodes;
+import org.cef.callback.CefContextMenuParams;
+import org.cef.callback.CefMenuModel;
+import org.cef.handler.CefContextMenuHandlerAdapter;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
-import org.objectweb.asm.tree.TypeInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 import org.panda_lang.pandomium.Pandomium;
 import org.panda_lang.pandomium.settings.PandomiumSettings;
@@ -87,6 +89,16 @@ public class TaterwebzPandomium extends Pandomium {
 
     }
 
+    public void postInitialize() {
+        // Disable all context menus
+        PANDOMIUM_CLIENT.getCefClient().addContextMenuHandler(new CefContextMenuHandlerAdapter() {
+            @Override
+            public void onBeforeContextMenu(CefBrowser cefBrowser, CefFrame cefFrame, CefContextMenuParams cefContextMenuParams, CefMenuModel cefMenuModel) {
+                cefMenuModel.clear();
+            }
+        });
+    }
+
     public void loop() {
         ExcerptTailer tailer = ProjectInception.toParentQueue.createTailer().direction(TailerDirection.FORWARD);
         tailer.toEnd();
@@ -97,6 +109,11 @@ public class TaterwebzPandomium extends Pandomium {
         //test.width = 256;
         //test.height = 256;
         //QueueProtocol.writeParent2ChildMessage(test, ProjectInception.toParentQueue.acquireAppender());
+
+        CefBrowser browser2 = PANDOMIUM_CLIENT.getCefClient().createBrowser("https://google.com/", true, true);
+        JFrame frame = new JFrame();
+        frame.add(browser2.getUIComponent());
+        frame.setVisible(true);
 
         try {
             while(true) {

@@ -61,6 +61,7 @@ public class CEFDownloader {
             bar.setProgress(0.9F);
             bar.update();
             TaterwebzPandomium.PANDOMIUM_CLIENT = pandomium.createClient();
+            pandomium.postInitialize();
             bar.setProgress(1F);
             bar.setDone(true);
             bar.update();

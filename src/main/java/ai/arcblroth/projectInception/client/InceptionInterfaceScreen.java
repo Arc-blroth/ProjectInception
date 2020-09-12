@@ -1,9 +1,7 @@
 package ai.arcblroth.projectInception.client;
 
-import ai.arcblroth.projectInception.client.mc.MinecraftGameInstance;
-import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionClient;
-import ai.arcblroth.projectInception.block.GameBlockEntity;
+import ai.arcblroth.projectInception.block.AbstractDisplayBlockEntity;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.InputUtil;
@@ -11,19 +9,20 @@ import net.minecraft.client.util.NarratorManager;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Util;
 
-import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.glfw.GLFW.GLFW_CURSOR_DISABLED;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_ESCAPE;
 
 public class InceptionInterfaceScreen extends Screen {
 
-    private final GameBlockEntity blockEntity;
-    private final MinecraftGameInstance gameInstance;
+    private final AbstractDisplayBlockEntity<?> blockEntity;
+    private final AbstractGameInstance<?> gameInstance;
     private long lastEscPressTime = 0;
 
-    public InceptionInterfaceScreen(GameBlockEntity blockEntity) {
+    public InceptionInterfaceScreen(AbstractDisplayBlockEntity<?> blockEntity) {
         super(NarratorManager.EMPTY);
         this.blockEntity = blockEntity;
         this.gameInstance = blockEntity.getGameInstance();
-        ProjectInception.focusedInstance = gameInstance;
+        ProjectInceptionClient.focusedInstance = gameInstance;
     }
 
     @Override
@@ -41,7 +40,7 @@ public class InceptionInterfaceScreen extends Screen {
     @Override
     public void tick() {
         // exact variable testing intentional
-        if(ProjectInception.focusedInstance != gameInstance || !blockEntity.isOn()
+        if(ProjectInceptionClient.focusedInstance != gameInstance || !blockEntity.isOn()
         || !this.client.player.isAlive() || this.client.player.removed) {
             this.client.openScreen(null);
         }
@@ -66,8 +65,8 @@ public class InceptionInterfaceScreen extends Screen {
     @Override
     public void removed() {
         this.client.keyboard.setRepeatEvents(false);
-        if(ProjectInception.focusedInstance == gameInstance) {
-            ProjectInception.focusedInstance = null;
+        if(ProjectInceptionClient.focusedInstance == gameInstance) {
+            ProjectInceptionClient.focusedInstance = null;
         }
     }
 

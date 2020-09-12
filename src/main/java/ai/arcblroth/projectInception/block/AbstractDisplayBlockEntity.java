@@ -1,5 +1,6 @@
 package ai.arcblroth.projectInception.block;
 
+import ai.arcblroth.projectInception.client.AbstractGameInstance;
 import net.fabricmc.fabric.api.block.entity.BlockEntityClientSerializable;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
@@ -126,5 +127,7 @@ public abstract class AbstractDisplayBlockEntity<T extends AbstractDisplayBlockE
     public int getSizeY() {
         return sizeY;
     }
+
+    public abstract AbstractGameInstance<T> getGameInstance();
 
 }

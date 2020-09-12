@@ -1,6 +1,7 @@
 package ai.arcblroth.projectInception.client;
 
 import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.block.GameBlock;
 import ai.arcblroth.projectInception.block.GameBlockEntity;
 import net.fabricmc.api.EnvType;
@@ -10,13 +11,10 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
-import net.minecraft.client.texture.NativeImage;
-import net.minecraft.client.texture.NativeImageBackedTexture;
 import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.item.ItemStack;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -24,10 +22,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.world.World;
 
-import java.nio.ByteBuffer;
 import java.util.Random;
-
-import static org.lwjgl.system.MemoryUtil.memAddress;
 
 @Environment(EnvType.CLIENT)
 public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity> {
@@ -131,7 +126,7 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
                     0.0F, 1.0F,
                     0.0F, 1.0F,
                     light);
-            if(ProjectInception.focusedInstance == blockEntity.getGameInstance() && blockEntity.getGameInstance().shouldShowCursor()) {
+            if(ProjectInceptionClient.focusedInstance == blockEntity.getGameInstance() && blockEntity.getGameInstance().shouldShowCursor()) {
                 VertexConsumer ptVertexConsumer = vertexConsumers.getBuffer(RenderLayer.getText(pointerSprite.getAtlas().getId()));
                 float left = 1F - (float) blockEntity.getGameInstance().getLastMouseX();
                 float top = 1F - (float) blockEntity.getGameInstance().getLastMouseY();

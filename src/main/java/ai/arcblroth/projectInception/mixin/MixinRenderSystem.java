@@ -1,6 +1,7 @@
 package ai.arcblroth.projectInception.mixin;
 
 import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -50,7 +51,7 @@ public class MixinRenderSystem {
                 b.writeByte(QueueProtocol.MessageType.IMAGE.header);
                 b.writeInt(fboWidth);
                 b.writeInt(fboHeight);
-                b.writeBoolean(!(MinecraftClient.getInstance().mouse.isCursorLocked() || ProjectInception.focusedInstance != null));
+                b.writeBoolean(!(MinecraftClient.getInstance().mouse.isCursorLocked() || ProjectInceptionClient.focusedInstance != null));
                 UnsafeMemory.UNSAFE.copyMemory(
                         memAddress(projectInceptionOutput),
                         b.addressForWrite(b.writePosition()),

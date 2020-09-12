@@ -1,6 +1,7 @@
 package ai.arcblroth.projectInception.mixin;
 
 import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.duck.IPreventMouseFromStackOverflow;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
@@ -90,11 +91,11 @@ public abstract class MixinMouse implements IPreventMouseFromStackOverflow {
     @Inject(method = "onMouseButton", at = @At("HEAD"))
     private void onParentMouseButton(long window, int button, int action, int mods, CallbackInfo ci) {
         if(window == this.client.getWindow().getHandle()) {
-            if(ProjectInception.focusedInstance != null) {
+            if(ProjectInceptionClient.focusedInstance != null) {
                 projectInceptionMbMessage.button = button;
                 projectInceptionMbMessage.message = action;
                 projectInceptionMbMessage.mods = mods;
-                ProjectInception.focusedInstance.sendParent2ChildMessage(projectInceptionMbMessage);
+                ProjectInceptionClient.focusedInstance.sendParent2ChildMessage(projectInceptionMbMessage);
             }
         }
     }
@@ -102,10 +103,10 @@ public abstract class MixinMouse implements IPreventMouseFromStackOverflow {
     @Inject(method = "onMouseScroll", at = @At("HEAD"))
     private void onParentMouseScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
         if(window == this.client.getWindow().getHandle()) {
-            if(ProjectInception.focusedInstance != null) {
+            if(ProjectInceptionClient.focusedInstance != null) {
                 projectInceptionMsMessage.horizontal = horizontal;
                 projectInceptionMsMessage.vertical = vertical;
-                ProjectInception.focusedInstance.sendParent2ChildMessage(projectInceptionMsMessage);
+                ProjectInceptionClient.focusedInstance.sendParent2ChildMessage(projectInceptionMsMessage);
             }
         }
     }
@@ -113,15 +114,15 @@ public abstract class MixinMouse implements IPreventMouseFromStackOverflow {
     @Inject(method = "onCursorPos", at = @At("HEAD"))
     private void onParentCursorPos(long window, double x, double y, CallbackInfo ci) {
         if(window == this.client.getWindow().getHandle()) {
-            if(ProjectInception.focusedInstance != null) {
+            if(ProjectInceptionClient.focusedInstance != null) {
                 if(this.hasResolutionChanged) {
                     projectInceptionMpMessage.x = x / this.client.getWindow().getWidth();
                     projectInceptionMpMessage.y = y / this.client.getWindow().getHeight();
-                    ProjectInception.focusedInstance.sendParent2ChildMessage(projectInceptionMpMessage);
+                    ProjectInceptionClient.focusedInstance.sendParent2ChildMessage(projectInceptionMpMessage);
                 } else {
                     projectInceptionMmMessage.x = x / this.client.getWindow().getWidth();
                     projectInceptionMmMessage.y = y / this.client.getWindow().getHeight();
-                    ProjectInception.focusedInstance.sendParent2ChildMessage(projectInceptionMmMessage);
+                    ProjectInceptionClient.focusedInstance.sendParent2ChildMessage(projectInceptionMmMessage);
                 }
             }
         }

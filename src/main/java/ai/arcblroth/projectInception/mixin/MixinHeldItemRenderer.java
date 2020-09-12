@@ -1,8 +1,7 @@
 package ai.arcblroth.projectInception.mixin;
 
-import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.item.InceptionInterfaceItem;
-import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.render.model.json.ModelTransformation;
@@ -20,7 +19,7 @@ public class MixinHeldItemRenderer {
     @Inject(method = "renderItem", at = @At("HEAD"), cancellable = true)
     private void renderItem(LivingEntity entity, ItemStack stack, ModelTransformation.Mode renderMode, boolean leftHanded, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         if(stack.getItem() instanceof InceptionInterfaceItem) {
-            if(ProjectInception.focusedInstance != null) {
+            if(ProjectInceptionClient.focusedInstance != null) {
                 ci.cancel();
             }
         }

@@ -1,6 +1,7 @@
 package ai.arcblroth.projectInception.mixin;
 
 import ai.arcblroth.projectInception.ProjectInception;
+import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import ai.arcblroth.projectInception.duck.IAmAKeyboard;
 import net.minecraft.client.Keyboard;
@@ -17,7 +18,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 
-import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
+import static ai.arcblroth.projectInception.client.mc.QueueProtocol.KeyboardCharMessage;
+import static ai.arcblroth.projectInception.client.mc.QueueProtocol.KeyboardKeyMessage;
 
 @Mixin(Keyboard.class)
 public class MixinKeyboard implements IAmAKeyboard {
@@ -53,12 +55,12 @@ public class MixinKeyboard implements IAmAKeyboard {
     @Inject(method = "onKey", at = @At("HEAD"))
     private void onParentKey(long window, int key, int scancode, int i, int j, CallbackInfo ci) {
         if(window == this.client.getWindow().getHandle()) {
-            if(ProjectInception.focusedInstance != null) {
+            if(ProjectInceptionClient.focusedInstance != null) {
                 projectInceptionKeMessage.key = key;
                 projectInceptionKeMessage.scancode = scancode;
                 projectInceptionKeMessage.action = i;
                 projectInceptionKeMessage.mods = j;
-                ProjectInception.focusedInstance.sendParent2ChildMessage(projectInceptionKeMessage);
+                ProjectInceptionClient.focusedInstance.sendParent2ChildMessage(projectInceptionKeMessage);
             }
         }
     }
@@ -66,10 +68,10 @@ public class MixinKeyboard implements IAmAKeyboard {
     @Inject(method = "onChar", at = @At("HEAD"))
     private void onParentChar(long window, int i, int j, CallbackInfo ci) {
         if(window == this.client.getWindow().getHandle()) {
-            if(ProjectInception.focusedInstance != null) {
+            if(ProjectInceptionClient.focusedInstance != null) {
                 projectInceptionKcMessage.codepoint = i;
                 projectInceptionKcMessage.mods = j;
-                ProjectInception.focusedInstance.sendParent2ChildMessage(projectInceptionKcMessage);
+                ProjectInceptionClient.focusedInstance.sendParent2ChildMessage(projectInceptionKcMessage);
             }
         }
     }

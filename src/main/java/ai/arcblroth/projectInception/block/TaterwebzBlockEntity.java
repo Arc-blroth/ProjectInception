@@ -44,7 +44,8 @@ public class TaterwebzBlockEntity extends AbstractDisplayBlockEntity<TaterwebzBl
         }
     }
 
-    public TaterwebzInstance getTaterwebzInstance() {
+    @Override
+    public TaterwebzInstance getGameInstance() {
         return instance;
     }
 

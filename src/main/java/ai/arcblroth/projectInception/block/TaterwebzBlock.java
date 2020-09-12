@@ -27,10 +27,10 @@ public class TaterwebzBlock extends AbstractDisplayBlock<TaterwebzBlockEntity> {
     public void click(TaterwebzBlockEntity te, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, double hitX, double hitY) {
         if (world.isClient) {
             if (player.getStackInHand(hand).getItem() instanceof InceptionInterfaceItem) {
-                //MinecraftClient.getInstance().openScreen(new InceptionInterfaceScreen(ge));
-                //player.sendMessage(new TranslatableText("message.project_inception.escape", ProjectInceptionClient.EXIT_INNER_LOCK.getBoundKeyLocalizedText()), true);
+                MinecraftClient.getInstance().openScreen(new InceptionInterfaceScreen(te));
+                player.sendMessage(new TranslatableText("message.project_inception.escape", ProjectInceptionClient.EXIT_INNER_LOCK.getBoundKeyLocalizedText()), true);
             } else {
-                te.getTaterwebzInstance().click(hitX, hitY);
+                te.getGameInstance().click(hitX, hitY);
             }
         }
     }

@@ -59,7 +59,7 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
     private final Object send2ChildLock = new Object();
     private ArrayList<Message> messages2ChildToSend = new ArrayList<>();
 
-    static {
+    public static void registerShutdownHook() {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             ProjectInception.LOGGER.log(Level.INFO, "Destroying game and taterwebz instances on exit...");
             stopAllGameInstances();
@@ -240,6 +240,11 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
                 }
             }
             return texture;
+        } catch (IllegalStateException e) {
+            // this can occur if the queue
+            // is closed while we try to read
+            // from it
+            return null;
         }
     }
 
@@ -266,8 +271,10 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
         message2.button = GLFW_MOUSE_BUTTON_LEFT;
         message2.message = GLFW_PRESS;
         sendParent2ChildMessage(message2);
-        message2.message = GLFW_RELEASE;
-        sendParent2ChildMessage(message2);
+        MouseButtonMessage message3 = new MouseButtonMessage();
+        message3.button = GLFW_MOUSE_BUTTON_LEFT;
+        message3.message = GLFW_RELEASE;
+        sendParent2ChildMessage(message3);
     }
 
     public void clampCursor() {
