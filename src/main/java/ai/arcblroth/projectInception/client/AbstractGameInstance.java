@@ -101,7 +101,7 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
             try {
                 FileUtils.deleteDirectory(childQueueDir);
             } catch (IOException e) {
-                ProjectInception.LOGGER.warn("Couldn't delete existing child queue directory. Things might not work.", e);
+                ProjectInception.LOGGER.warn("Couldn't delete existing child queue directory. Things might not work.\n" + e.getClass().getName() + ": " + e.getLocalizedMessage());
             }
         }
         this.childQueue = ProjectInceptionEarlyRiser.buildQueue(childQueueDir);

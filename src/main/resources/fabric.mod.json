@@ -16,7 +16,7 @@
   "license": "GPL-3.0",
   "icon": "assets/project_inception/icon.png",
 
-  "environment": "client",
+  "environment": "*",
   "entrypoints": {
     "mm:early_risers": [
       "ai.arcblroth.projectInception.ProjectInceptionEarlyRiser"

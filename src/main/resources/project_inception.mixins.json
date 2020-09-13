@@ -3,6 +3,9 @@
   "minVersion": "0.8",
   "package": "ai.arcblroth.projectInception.mixin",
   "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinRecipeManager"
+  ],
   "client": [
     "MixinClientMain",
     "MixinHeldItemRenderer",
@@ -12,7 +15,6 @@
     "MixinMinecraftClient",
     "MixinMinecraftServer",
     "MixinMouse",
-    "MixinRecipeManager",
     "MixinRenderSystem",
     "MixinSplashScreen",
     "MixinSplashTextResourceSupplier"

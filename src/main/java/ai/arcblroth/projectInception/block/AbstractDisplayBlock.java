@@ -1,8 +1,5 @@
 package ai.arcblroth.projectInception.block;
 
-import ai.arcblroth.projectInception.ProjectInceptionClient;
-import ai.arcblroth.projectInception.client.InceptionInterfaceScreen;
-import ai.arcblroth.projectInception.item.InceptionInterfaceItem;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.BlockWithEntity;
