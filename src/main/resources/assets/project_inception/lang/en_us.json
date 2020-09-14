@@ -8,6 +8,8 @@
   "message.project_inception.empty_hand_warning": "Click with an empty hand to activate.",
   "message.project_inception.loading": "[Project Inception] Loading Minecraft, please wait...",
 
+  "gui.project_inception.go": "Go",
+
   "message.project_inception.splash1": "Project Inception!",
   "message.project_inception.splash2": "A dream within a dream...",
   "message.project_inception.splash3": "What if its all just a simulation?",

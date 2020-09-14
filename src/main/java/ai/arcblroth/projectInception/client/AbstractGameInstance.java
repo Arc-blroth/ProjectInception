@@ -119,9 +119,6 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
         Runnable stopFunc = () -> {
             ProjectInception.LOGGER.log(Level.DEBUG, "Destroying game instance #" + this.instanceNumber);
             stopInner();
-            if(this.childQueue != null && !this.childQueue.isClosed()) {
-                this.childQueue.close();
-            }
         };
         if(async) {
             new Thread(stopFunc).start();

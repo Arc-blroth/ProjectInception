@@ -1,12 +1,14 @@
 package ai.arcblroth.projectInception.client.mc;
 
-import ai.arcblroth.projectInception.client.AbstractGameInstance;
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.block.GameBlockEntity;
 import ai.arcblroth.projectInception.block.GameMultiblock;
+import ai.arcblroth.projectInception.client.AbstractGameInstance;
 import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.Monitor;
 import org.apache.logging.log4j.Level;
 
 import java.io.IOException;
@@ -27,13 +29,29 @@ public class MinecraftGameInstance extends AbstractGameInstance<GameBlockEntity>
     }
 
     private ArrayList<String> buildCommandLine() {
+        // Fix things rendering oddly when the resolution is greater
+        // than the maximum window size. Fixes CURSEFORGE-2
+        Monitor m = MinecraftClient.getInstance().getWindow().getMonitor();
+        int displayWidth = m.getCurrentVideoMode().getWidth();
+        int displayHeight = m.getCurrentVideoMode().getHeight();
+        int instanceWidth = multiblock.sizeX * ProjectInceptionConfig.DISPLAY_SCALE;
+        int instanceHeight = multiblock.sizeY * ProjectInceptionConfig.DISPLAY_SCALE;
+        if(instanceWidth > displayWidth || instanceHeight > displayHeight) {
+            double aspect = instanceHeight / (double)instanceWidth;
+            if(aspect > 1) {
+                instanceHeight = displayHeight;
+                instanceWidth = (int)Math.round(displayHeight * (1 / aspect));
+            } else {
+                instanceWidth = displayWidth;
+                instanceHeight = (int)Math.round(displayHeight * aspect);
+            }
+        }
+
         ArrayList<String> commandLine = ProjectInceptionEarlyRiser.newCommandLineForForking();
         String newInstancePrefix = ProjectInceptionEarlyRiser.INSTANCE_PREFIX + "-" + instanceNumber;
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_IS_INNER + "=true");
-        commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_WIDTH
-                + "=" + (multiblock.sizeX * ProjectInceptionConfig.DISPLAY_SCALE));
-        commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_HEIGHT
-                + "=" + (multiblock.sizeY * ProjectInceptionConfig.DISPLAY_SCALE));
+        commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_WIDTH + "=" + instanceWidth);
+        commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_HEIGHT + "=" + instanceHeight);
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_INSTANCE_PREFIX + "=" + newInstancePrefix);
         if(!ProjectInceptionConfig.INCEPTION_EXTRA_VM_ARGS.isEmpty()) {
             StringBuilder buffer = new StringBuilder();
@@ -103,6 +121,9 @@ public class MinecraftGameInstance extends AbstractGameInstance<GameBlockEntity>
             synchronized (processLock) {
                 isProcessBeingKilled = false;
             }
+        }
+        if(this.childQueue != null && !this.childQueue.isClosed()) {
+            this.childQueue.close();
         }
     }
 

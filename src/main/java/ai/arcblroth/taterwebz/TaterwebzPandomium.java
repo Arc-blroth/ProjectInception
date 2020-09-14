@@ -105,16 +105,20 @@ public class TaterwebzPandomium extends Pandomium {
         tailer.toEnd();
         ArrayList<RequestBrowserMessage> browserRequests = new ArrayList<>();
 
-        RequestBrowserMessage test = new RequestBrowserMessage();
-        test.createOrDestroy = true;
-        test.width = 256;
-        test.height = 256;
-        QueueProtocol.writeParent2ChildMessage(test, ProjectInception.toParentQueue.acquireAppender());
+        //RequestBrowserMessage test = new RequestBrowserMessage();
+        //test.createOrDestroy = true;
+        //test.width = 256;
+        //test.height = 256;
+        //QueueProtocol.writeParent2ChildMessage(test, ProjectInception.toParentQueue.acquireAppender());
 
         //CefBrowser browser2 = PANDOMIUM_CLIENT.getCefClient().createBrowser("https://google.com/", true, true);
         //JFrame frame = new JFrame();
         //frame.add(browser2.getUIComponent());
         //frame.setVisible(true);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            CefApp.getInstance().shutdown();
+        }));
 
         try {
             while(true) {
@@ -137,7 +141,7 @@ public class TaterwebzPandomium extends Pandomium {
 
                 for(RequestBrowserMessage rbMessage : browserRequests) {
                     if(rbMessage.createOrDestroy) {
-                        browsers.put(rbMessage.uuid, createBrowser("about:blank", rbMessage.width, rbMessage.height, rbMessage.uuid));
+                        browsers.put(rbMessage.uuid, createBrowser(rbMessage.initialURL, rbMessage.width, rbMessage.height, rbMessage.uuid));
                     } else {
                         TaterwebzBrowser browser = browsers.remove(rbMessage.uuid);
                         if(browser != null) {
@@ -168,12 +172,11 @@ public class TaterwebzPandomium extends Pandomium {
             crash.throwable = e;
             QueueProtocol.writeChild2ParentMessage(crash, ProjectInception.toParentQueue.acquireAppender());
             throw new RuntimeException(e);
-        } finally {
-            CefApp.getInstance().shutdown();
         }
     }
 
     public static TaterwebzBrowser createBrowser(String url, int width, int height, int uuid) {
+        if(url == null || url.isEmpty()) url = "about:blank";
         ProjectInception.LOGGER.info("Creating browser with url " + url);
         if (PANDOMIUM_CLIENT.getCefClient().isDisposed_) {
             throw new IllegalStateException("Can't create browser. CefClient is disposed.");

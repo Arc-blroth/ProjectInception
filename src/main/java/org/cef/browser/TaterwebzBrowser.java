@@ -10,6 +10,7 @@ import net.openhft.chronicle.wire.DocumentContext;
 import org.cef.CefClient;
 import org.cef.callback.CefDragData;
 import org.cef.handler.CefRenderHandler;
+import org.lwjgl.BufferUtils;
 import org.lwjgl.glfw.GLFW;
 import org.panda_lang.pandomium.util.os.PandomiumOS;
 
@@ -25,6 +26,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
+import static javax.media.opengl.GL2GL3.*;
 
 public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
 
@@ -45,12 +47,15 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
     }
 
     public GLAutoDrawable canvas_;
+    public CefRenderer renderer_;
     public long window_handle_;
     public Rectangle browser_rect_;
     public Point screenPoint_;
     public boolean isTransparent_;
     public Component fauxComponent;
     private boolean isInitYet = false;
+
+    private static ByteBuffer rendererOut;
 
     private final ChronicleQueue queue;
     private final ExcerptTailer tailer;
@@ -76,6 +81,7 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
         this.browser_rect_ = new Rectangle(0, 0, width, height);
         this.screenPoint_ = new Point(0, 0);
         this.isTransparent_ = transparent;
+        this.renderer_ = new CefRenderer(isTransparent_);
         createGLCanvas();
 
         if (getParentBrowser() == null) {
@@ -95,7 +101,8 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
 
         GLDrawableFactory factory = GLDrawableFactory.getFactory(profile);
         this.canvas_ = factory.createOffscreenAutoDrawable(factory.getDefaultDevice(), capabilities, new DefaultGLCapabilitiesChooser(), this.browser_rect_.width, this.browser_rect_.height);
-
+        this.canvas_.display();
+        
         this.fauxComponent = new Component() {
             @Override
             public boolean isShowing() {
@@ -359,9 +366,17 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
 
     @Override
     public void onPaint(CefBrowser cefBrowser, boolean popup, Rectangle[] rectangles, ByteBuffer byteBuffer, int width, int height) {
-        if(popup) return;
         //ProjectInception.LOGGER.info("painting");
-        byteBuffer.rewind();
+        GLContext context = this.canvas_.getContext();
+        context.makeCurrent();
+        this.renderer_.onPaint(this.canvas_.getGL().getGL2(), popup, rectangles, byteBuffer, width, height);
+
+        if (rendererOut == null || rendererOut.capacity() < browser_rect_.width * browser_rect_.height * 4) {
+            rendererOut = BufferUtils.createByteBuffer(width * height * 4);
+        }
+        context.getGL().glBindFramebuffer(GL_READ_FRAMEBUFFER, GL_FRONT_LEFT);
+        context.getGL().glReadPixels(0, 0, browser_rect_.width, browser_rect_.height, GL_RGBA, GL_UNSIGNED_BYTE, rendererOut);
+
         queue.acquireAppender().writeBytes(b -> {
             b.writeByte(QueueProtocol.MessageType.IMAGE.header);
             b.writeInt(width);
@@ -375,6 +390,7 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
                 b.writeByte(byteBuffer.get(i * 4 + 3));
             }
         });
+        context.release();
     }
 
     @Override
@@ -431,8 +447,10 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
     }
 
     public void dispose() {
-        canvas_.destroy();
-        queue.close();
+        try {
+            canvas_.destroy();
+            queue.close();
+        } catch (Exception ignored) {}
     }
 
 }

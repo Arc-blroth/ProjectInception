@@ -7,6 +7,10 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.NarratorManager;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
+
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_ENTER;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER;
 
 public class TaterwebzControlScreen extends Screen {
 
@@ -34,7 +38,7 @@ public class TaterwebzControlScreen extends Screen {
             blockEntity.getGameInstance().reload();
             this.onClose();
         }));
-        goButton      = addButton(new ButtonWidget(this.width * 5 / 6 + 10, this.height / 2 - 10, 20, 20, new LiteralText("Go"), (buttonWidget) -> {
+        goButton      = addButton(new ButtonWidget(this.width * 5 / 6 + 10, this.height / 2 - 10, 20, 20, new TranslatableText("gui.project_inception.go"), (buttonWidget) -> {
             gotoUrl(urlField.getText());
         }));
         urlField = new TextFieldWidget(this.textRenderer, this.width / 6 + 55, this.height / 2 - 10, this.width * 2 / 3 - 48, 20, NarratorManager.EMPTY);
@@ -55,7 +59,7 @@ public class TaterwebzControlScreen extends Screen {
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (super.keyPressed(keyCode, scanCode, modifiers)) {
             return true;
-        } else if (keyCode != '\r' && keyCode != '\n') {
+        } else if (keyCode != GLFW_KEY_ENTER && keyCode != GLFW_KEY_KP_ENTER) {
             return false;
         } else {
             if(!this.urlField.getText().isEmpty()) {

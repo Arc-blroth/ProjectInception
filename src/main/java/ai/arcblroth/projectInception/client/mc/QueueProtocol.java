@@ -68,8 +68,9 @@ import java.io.*;
  *         {@link MessageType#REQUEST_BROWSER} | parent &rarr; child | only used for Taterwebz.<br>
  *         <code>boolean createOrDestroy // true for create and false for destroy</code><br>
  *         <code>int uuid</code><br>
- *         <code>int width // width and height are 0 for destroy</code><br>
+ *         <code>int width // the following are only set for create</code><br>
  *         <code>int height</code><br>
+ *         <code>String initialURL</code><br>
  *     </li>
  *     <li>
  *         {@link MessageType#SET_PAGE} | parent &#8596; child, implemented in send/readParent2Child only | only used for Taterwebz.<br>
@@ -178,6 +179,7 @@ public class QueueProtocol {
         public int uuid;
         public int width;
         public int height;
+        public String initialURL;
         @Override public MessageType getMessageType() { return MessageType.REQUEST_BROWSER; }
     }
 
@@ -258,6 +260,7 @@ public class QueueProtocol {
                 if(rbMessage.createOrDestroy) {
                     b.writeInt(rbMessage.width);
                     b.writeInt(rbMessage.height);
+                    b.writeUtf8(rbMessage.initialURL);
                 }
             } else if(message instanceof SetPageMessage) {
                 SetPageMessage spMessage = (SetPageMessage) message;
@@ -316,6 +319,7 @@ public class QueueProtocol {
             if(rbMessage.createOrDestroy) {
                 rbMessage.width = bytes.readInt();
                 rbMessage.height = bytes.readInt();
+                rbMessage.initialURL = bytes.readUtf8();
             }
             return rbMessage;
         } else if(messageType.equals(MessageType.SET_PAGE)) {

@@ -18,7 +18,7 @@ import static ai.arcblroth.projectInception.client.mc.QueueProtocol.readParent2C
 public class TaterwebzInstance extends AbstractGameInstance<TaterwebzBlockEntity> {
 
     private final ExcerptTailer secondTailer;
-    private String lastURL = "about:blank";
+    private String lastURL = ProjectInceptionConfig.TATERWEBZ_HOME_PAGE;
 
     public TaterwebzInstance(GameMultiblock<TaterwebzBlockEntity> multiblock) {
         super(multiblock);
@@ -38,11 +38,8 @@ public class TaterwebzInstance extends AbstractGameInstance<TaterwebzBlockEntity
         rbMessage.uuid = instanceNumber;
         rbMessage.width = multiblock.sizeX * ProjectInceptionConfig.TATERWEBZ_SCALE;
         rbMessage.height = multiblock.sizeY * ProjectInceptionConfig.TATERWEBZ_SCALE;
+        rbMessage.initialURL = ProjectInceptionConfig.TATERWEBZ_HOME_PAGE;
         QueueProtocol.writeParent2ChildMessage(rbMessage, appender);
-        QueueProtocol.SetPageMessage spMessage = new QueueProtocol.SetPageMessage();
-        spMessage.action = QueueProtocol.SetPageMessage.ACTION_GOTO;
-        spMessage.url = ProjectInceptionConfig.TATERWEBZ_HOME_PAGE;
-        QueueProtocol.writeParent2ChildMessage(spMessage, this.childQueue.acquireAppender());
         super.start();
     }
 
