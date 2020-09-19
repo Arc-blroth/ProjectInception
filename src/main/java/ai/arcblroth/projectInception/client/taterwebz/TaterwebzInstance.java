@@ -1,5 +1,6 @@
 package ai.arcblroth.projectInception.client.taterwebz;
 
+import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.block.GameMultiblock;
@@ -35,7 +36,7 @@ public class TaterwebzInstance extends AbstractGameInstance<TaterwebzBlockEntity
         ExcerptAppender appender = ProjectInceptionClient.TATERWEBZ_CHILD_QUEUE.acquireAppender();
         QueueProtocol.RequestBrowserMessage rbMessage = new QueueProtocol.RequestBrowserMessage();
         rbMessage.createOrDestroy = true;
-        rbMessage.uuid = instanceNumber;
+        rbMessage.uuid = ProjectInceptionEarlyRiser.BROWSER_PREFIX + "-" + instanceNumber;
         rbMessage.width = multiblock.sizeX * ProjectInceptionConfig.TATERWEBZ_SCALE;
         rbMessage.height = multiblock.sizeY * ProjectInceptionConfig.TATERWEBZ_SCALE;
         rbMessage.initialURL = ProjectInceptionConfig.TATERWEBZ_HOME_PAGE;
@@ -48,13 +49,13 @@ public class TaterwebzInstance extends AbstractGameInstance<TaterwebzBlockEntity
         ExcerptAppender appender = ProjectInceptionClient.TATERWEBZ_CHILD_QUEUE.acquireAppender();
         QueueProtocol.RequestBrowserMessage rbMessage = new QueueProtocol.RequestBrowserMessage();
         rbMessage.createOrDestroy = false;
-        rbMessage.uuid = instanceNumber;
+        rbMessage.uuid = ProjectInceptionEarlyRiser.BROWSER_PREFIX + "-" + instanceNumber;
         QueueProtocol.writeParent2ChildMessage(rbMessage, appender);
     }
 
     @Override
     public boolean isAlive() {
-        return ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS.isAlive();
+        return ProjectInception.IS_INNER || ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS.isAlive();
     }
 
     @Override

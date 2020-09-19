@@ -1,4 +1,4 @@
-package ai.arcblroth.projectInception.mixin;
+package ai.arcblroth.projectInception.mixin.fabriccord;
 
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;

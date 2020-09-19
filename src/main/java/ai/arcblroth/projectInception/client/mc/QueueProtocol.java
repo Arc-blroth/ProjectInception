@@ -67,7 +67,7 @@ import java.io.*;
  *     <li>
  *         {@link MessageType#REQUEST_BROWSER} | parent &rarr; child | only used for Taterwebz.<br>
  *         <code>boolean createOrDestroy // true for create and false for destroy</code><br>
- *         <code>int uuid</code><br>
+ *         <code>String uuid</code><br>
  *         <code>int width // the following are only set for create</code><br>
  *         <code>int height</code><br>
  *         <code>String initialURL</code><br>
@@ -176,7 +176,7 @@ public class QueueProtocol {
 
     public static final class RequestBrowserMessage extends Message {
         public boolean createOrDestroy;
-        public int uuid;
+        public String uuid;
         public int width;
         public int height;
         public String initialURL;
@@ -256,7 +256,7 @@ public class QueueProtocol {
             } else if(message instanceof RequestBrowserMessage) {
                 RequestBrowserMessage rbMessage = (RequestBrowserMessage) message;
                 b.writeBoolean(rbMessage.createOrDestroy);
-                b.writeInt(rbMessage.uuid);
+                b.writeUtf8(rbMessage.uuid);
                 if(rbMessage.createOrDestroy) {
                     b.writeInt(rbMessage.width);
                     b.writeInt(rbMessage.height);
@@ -315,7 +315,7 @@ public class QueueProtocol {
         } else if(messageType.equals(MessageType.REQUEST_BROWSER)) {
             RequestBrowserMessage rbMessage = new RequestBrowserMessage();
             rbMessage.createOrDestroy = bytes.readBoolean();
-            rbMessage.uuid = bytes.readInt();
+            rbMessage.uuid = bytes.readUtf8();
             if(rbMessage.createOrDestroy) {
                 rbMessage.width = bytes.readInt();
                 rbMessage.height = bytes.readInt();

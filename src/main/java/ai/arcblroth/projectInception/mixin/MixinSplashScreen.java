@@ -2,7 +2,6 @@ package ai.arcblroth.projectInception.mixin;
 
 import ai.arcblroth.projectInception.postlaunch.PostLaunchEntrypoint;
 import ai.arcblroth.projectInception.postlaunch.ProgressBar;
-import io.github.a5b84.darkloadingscreen.Mod;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
@@ -26,7 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import static net.minecraft.client.gui.DrawableHelper.fill;
-import static net.minecraft.client.gui.hud.BackgroundHelper.*;
+import static net.minecraft.client.gui.hud.BackgroundHelper.ColorMixer;
 
 @Mixin(SplashScreen.class)
 public class MixinSplashScreen {
@@ -50,8 +49,16 @@ public class MixinSplashScreen {
         projectInceptionThreadPool = Executors.newFixedThreadPool(1);
 
         if(FabricLoader.getInstance().isModLoaded("dark-loading-screen")) {
-            projectInceptionProgressBarBorder = Mod.config.borderColor;
-            projectInceptionProgressBarColor = Mod.config.barColor;
+            try {
+                Class<?> dls = Class.forName("io.github.a5b84.darkloadingscreen.Mod");
+                Object config = dls.getField("config").get(null);
+                Class<?> configClass = config.getClass();
+                projectInceptionProgressBarBorder = (int) configClass.getField("borderColor").get(config);
+                projectInceptionProgressBarColor = (int) configClass.getField("barColor").get(config);
+            } catch (ReflectiveOperationException e) {
+                projectInceptionProgressBarBorder = ColorMixer.getArgb(255, 255, 255, 255);
+                projectInceptionProgressBarColor = projectInceptionProgressBarBorder;
+            }
         } else {
             projectInceptionProgressBarBorder = ColorMixer.getArgb(255, 255, 255, 255);
             projectInceptionProgressBarColor = projectInceptionProgressBarBorder;

@@ -11,6 +11,7 @@ import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
 import org.cef.CefApp;
 import org.cef.CefSettings;
+import org.cef.OS;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
 import org.cef.browser.TaterwebzBrowser;
@@ -21,12 +22,16 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 import org.panda_lang.pandomium.Pandomium;
+import org.panda_lang.pandomium.loader.PandomiumProgressListener;
 import org.panda_lang.pandomium.settings.PandomiumSettings;
 import org.panda_lang.pandomium.settings.PandomiumSettingsBuilder;
+import org.panda_lang.pandomium.wrapper.PandomiumCEF;
 import org.panda_lang.pandomium.wrapper.PandomiumClient;
 
 import javax.swing.*;
+import java.awt.*;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.ListIterator;
@@ -40,7 +45,7 @@ public class TaterwebzPandomium extends Pandomium {
     public static TaterwebzPandomium PANDOMIUM;
     public static PandomiumClient PANDOMIUM_CLIENT;
 
-    private TreeMap<Integer, TaterwebzBrowser> browsers;
+    private TreeMap<String, TaterwebzBrowser> browsers;
 
     public TaterwebzPandomium() {
         super(((Supplier<PandomiumSettings>) () -> {
@@ -65,7 +70,33 @@ public class TaterwebzPandomium extends Pandomium {
     }
 
     public void initialize(NotKnotClassLoader classLoader) {
-        super.initialize();
+        Toolkit.getDefaultToolkit();
+        getLoader().addProgressListener((state, progress) -> {
+            if (state == PandomiumProgressListener.State.DONE) {
+                try {
+                    Field pcef = Pandomium.class.getDeclaredField("pcef");
+                    pcef.setAccessible(true);
+                    pcef.set(this, new PandomiumCEF(this));
+                } catch (ReflectiveOperationException e) {
+                    throw new RuntimeException(e);
+                }
+
+                // For some reason, letting CEF load the libraries
+                // causes UnsatisfiedLinkErrors in production
+                // why this is @CallerSensitive we'll never know...
+                if (OS.isWindows()) {
+                    System.loadLibrary("jawt");
+                    System.loadLibrary("chrome_elf");
+                    System.loadLibrary("libcef");
+                } else if (OS.isLinux()) {
+                    System.loadLibrary("cef");
+                }
+                System.loadLibrary("jcef");
+
+                getRaw().initialize();
+            }
+        });
+        getLoader().load();
 
         // Patch JOGL native searching because for some reason
         // this breaks when we use a separate process
@@ -175,14 +206,14 @@ public class TaterwebzPandomium extends Pandomium {
         }
     }
 
-    public static TaterwebzBrowser createBrowser(String url, int width, int height, int uuid) {
+    public static TaterwebzBrowser createBrowser(String url, int width, int height, String uuid) {
         if(url == null || url.isEmpty()) url = "about:blank";
-        ProjectInception.LOGGER.info("Creating browser with url " + url);
+        ProjectInception.LOGGER.info("Creating browser \"" + uuid + "\" with url " + url);
         if (PANDOMIUM_CLIENT.getCefClient().isDisposed_) {
             throw new IllegalStateException("Can't create browser. CefClient is disposed.");
         }
         ChronicleQueue queue = ProjectInceptionEarlyRiser.buildQueue(
-                new File(TaterwebzChild.OPTIONS.runDirectory, "projectInception" + File.separator + ProjectInceptionEarlyRiser.BROWSER_PREFIX + "-" + uuid)
+                new File(TaterwebzChild.OPTIONS.runDirectory, "projectInception" + File.separator + uuid)
         );
         return new TaterwebzBrowser(PANDOMIUM_CLIENT.getCefClient(), url, false, width, height, null, queue);
     }

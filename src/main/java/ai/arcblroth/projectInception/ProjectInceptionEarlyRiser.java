@@ -2,7 +2,9 @@ package ai.arcblroth.projectInception;
 
 import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
 import com.chocohead.mm.api.ClassTinkerers;
+import net.fabricmc.loader.ModContainer;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.launch.common.FabricLauncherBase;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.openhft.chronicle.queue.ChronicleQueue;
@@ -29,7 +31,6 @@ public class ProjectInceptionEarlyRiser implements Runnable {
     public static final String ARG_DISPLAY_WIDTH;
     public static final String ARG_DISPLAY_HEIGHT;
     public static final String ARG_INSTANCE_PREFIX;
-    public static final String ARG_BROWSER_PREFIX;
 
     public static final Logger LOGGER = LogManager.getLogger("ProjectInception");
     public static final boolean IS_INNER;
@@ -44,7 +45,6 @@ public class ProjectInceptionEarlyRiser implements Runnable {
         ARG_DISPLAY_WIDTH = className + ".DISPLAY_WIDTH";
         ARG_DISPLAY_HEIGHT = className + ".DISPLAY_HEIGHT";
         ARG_INSTANCE_PREFIX = className + ".INSTANCE_PREFIX";
-        ARG_BROWSER_PREFIX = className + ".BROWSER_PREFIX";
 
         IS_INNER = System.getProperty(ARG_IS_INNER) != null
                 && System.getProperty(ARG_IS_INNER).equals("true");
@@ -53,30 +53,40 @@ public class ProjectInceptionEarlyRiser implements Runnable {
                 : "inst";
         TATERWEBZ_PREFIX = "taterwebz-child-process";
         BROWSER_PREFIX = System.getProperty(ARG_INSTANCE_PREFIX) != null
-                ? System.getProperty(ARG_INSTANCE_PREFIX)
-                : "browser";
+                ? "browser"
+                : INSTANCE_PREFIX + "-browser";
     }
 
-    public static ArrayList<String> newCommandLineForForking() {
+    public static ArrayList<String> newCommandLineForForking(boolean useOriginalClasspath) {
         ArrayList<String> commandLine = new ArrayList<>();
         commandLine.add(System.getProperty("java.home") + File.separator + "bin" + File.separator + "java");
         List<String> jvmArgs = ManagementFactory.getRuntimeMXBean().getInputArguments();
         commandLine.addAll(jvmArgs);
         if(!FabricLoader.getInstance().isDevelopmentEnvironment()) {
-            if (!jvmArgs.stream().anyMatch(s -> s.contains("-cp") || s.contains("-classpath"))) {
+            if (!useOriginalClasspath || !jvmArgs.stream().anyMatch(s -> s.contains("-cp") || s.contains("-classpath"))) {
                 commandLine.add("-cp");
-                commandLine.add(System.getProperty("java.class.path"));
-            }
-            if (!jvmArgs.stream().anyMatch(s -> s.contains("-Djava.library.path"))) {
-                commandLine.add("-Djava.library.path=" + System.getProperty("java.library.path"));
+                List<String> classpath = new ArrayList<>();
+                classpath.add(System.getProperty("java.class.path"));
+                try {
+                    classpath.add(FabricLauncherBase.minecraftJar.toString());
+                    FabricLoader.getInstance().getAllMods().stream()
+                            .map(c -> (ModContainer)c)
+                            .map(ModContainer::getOriginUrl)
+                            .filter(u -> u.getProtocol().equals("file"))
+                            .map(u -> u.toString().substring(6))
+                            .forEach(classpath::add);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+                commandLine.add(String.join(File.pathSeparator, classpath));
             }
         } else {
             commandLine.removeIf(s -> s.startsWith("-javaagent") || s.startsWith("-agentlib"));
             commandLine.add("-cp");
             commandLine.add(System.getProperty("java.class.path"));
-            if(System.getProperty("java.library.path").length() > 0) {
-                commandLine.add("-Djava.library.path=" + System.getProperty("java.library.path"));
-            }
+        }
+        if(System.getProperty("java.library.path").length() > 0) {
+            commandLine.add("-Djava.library.path=" + System.getProperty("java.library.path"));
         }
         return commandLine;
     }
