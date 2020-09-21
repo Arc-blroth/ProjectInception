@@ -1,8 +1,11 @@
 package ai.arcblroth.taterwebz.util;
 
+import net.fabricmc.loader.transformer.accesswidener.AccessWidener;
+import net.fabricmc.loader.transformer.accesswidener.AccessWidenerVisitor;
 import org.apache.commons.io.IOUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 
 import java.io.IOException;
@@ -23,9 +26,14 @@ public class NotKnotClassLoader extends URLClassLoader {
     }
 
     private final MethodHandle findLoadedClass;
+    private final AccessWidener accessWidener;
     private HashMap<String, Consumer<ClassNode>> transformers;
 
     public NotKnotClassLoader(ClassLoader parent) {
+        this(parent, null);
+    }
+
+    public NotKnotClassLoader(ClassLoader parent, AccessWidener accessWidener) {
         super(new URL[0], parent);
         transformers = new HashMap<>();
 
@@ -36,6 +44,8 @@ public class NotKnotClassLoader extends URLClassLoader {
         } catch (NoSuchMethodException | IllegalAccessException e) {
             throw new RuntimeException(e);
         }
+
+        this.accessWidener = accessWidener;
     }
 
     @Override
@@ -85,13 +95,19 @@ public class NotKnotClassLoader extends URLClassLoader {
             if (stream != null) {
                 try {
                     byte[] clazzSource = IOUtils.toByteArray(stream);
-                    if(transformers.containsKey(name)) {
+                    if(accessWidener != null || transformers.containsKey(name)) {
                         ClassReader reader = new ClassReader(clazzSource);
                         ClassNode node = new ClassNode();
                         reader.accept(node, 0);
-                        transformers.get(name).accept(node);
+                        if (transformers.containsKey(name)) {
+                            transformers.get(name).accept(node);
+                        }
                         ClassWriter writer = new ClassWriter(0);
-                        node.accept(writer);
+                        if(accessWidener != null) {
+                            node.accept(new AccessWidenerVisitor(Opcodes.ASM8, writer, accessWidener));
+                        } else {
+                            node.accept(writer);
+                        }
                         clazzSource = writer.toByteArray();
                     }
                     try {

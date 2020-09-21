@@ -17,7 +17,8 @@
     "MixinMouse",
     "MixinRenderSystem",
     "MixinSplashScreen",
-    "MixinSplashTextResourceSupplier"
+    "MixinSplashTextResourceSupplier",
+    "MixinWindow"
   ],
   "injectors": {
     "defaultRequire": 1

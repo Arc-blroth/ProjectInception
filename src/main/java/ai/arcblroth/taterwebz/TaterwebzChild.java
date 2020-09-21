@@ -11,7 +11,10 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.net.*;
+import java.net.Authenticator;
+import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
+import java.net.Proxy;
 import java.util.List;
 
 public class TaterwebzChild {
@@ -60,6 +63,7 @@ public class TaterwebzChild {
             postLaunch.invoke(cefDownloader.newInstance(), classLoader);
         } catch (ReflectiveOperationException e) {
             e.printStackTrace();
+            System.exit(-1);
         }
     }
 

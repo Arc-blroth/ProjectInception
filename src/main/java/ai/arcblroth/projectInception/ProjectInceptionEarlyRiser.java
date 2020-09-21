@@ -53,8 +53,8 @@ public class ProjectInceptionEarlyRiser implements Runnable {
                 : "inst";
         TATERWEBZ_PREFIX = "taterwebz-child-process";
         BROWSER_PREFIX = System.getProperty(ARG_INSTANCE_PREFIX) != null
-                ? "browser"
-                : INSTANCE_PREFIX + "-browser";
+                ? INSTANCE_PREFIX + "-browser"
+                : "browser";
     }
 
     public static ArrayList<String> newCommandLineForForking(boolean useOriginalClasspath) {
@@ -81,7 +81,14 @@ public class ProjectInceptionEarlyRiser implements Runnable {
                 commandLine.add(String.join(File.pathSeparator, classpath));
             }
         } else {
-            commandLine.removeIf(s -> s.startsWith("-javaagent") || s.startsWith("-agentlib"));
+            ListIterator<String> iter = commandLine.listIterator();
+            while(iter.hasNext()) {
+                String s = iter.next();
+                if(s.startsWith("-agentlib")) {
+                    iter.remove();
+                    iter.add(s.replace("suspend=n", "suspend=y").replace("server=n", "server=y"));
+                }
+            }
             commandLine.add("-cp");
             commandLine.add(System.getProperty("java.class.path"));
         }
@@ -112,6 +119,9 @@ public class ProjectInceptionEarlyRiser implements Runnable {
                             insn instanceof MethodInsnNode && ((MethodInsnNode) insn).name.equals("glfwDefaultWindowHints"));
                     moveAfter(insns, glfwDefaultWindowHints);
                     insns.add(new LdcInsnNode(GLFW.GLFW_VISIBLE));
+                    insns.add(new InsnNode(Opcodes.ICONST_0));
+                    insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "org/lwjgl/glfw/GLFW", "glfwWindowHint", "(II)V"));
+                    insns.add(new LdcInsnNode(GLFW.GLFW_RESIZABLE));
                     insns.add(new InsnNode(Opcodes.ICONST_0));
                     insns.add(new MethodInsnNode(Opcodes.INVOKESTATIC, "org/lwjgl/glfw/GLFW", "glfwWindowHint", "(II)V"));
                 });

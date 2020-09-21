@@ -76,7 +76,7 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
 
     public TaterwebzBrowser(CefClient cefClient, String url, boolean transparent, int width, int height, CefRequestContext cefRequestContext, ChronicleQueue queue, CefBrowserOsr cefBrowserOsr, Point point) {
         super(cefClient, url, cefRequestContext, cefBrowserOsr, point);
-        this.lastURL = url_;
+        this.lastURL = getUrl();
         this.window_handle_ = 0L;
         this.browser_rect_ = new Rectangle(0, 0, width, height);
         this.screenPoint_ = new Point(0, 0);
