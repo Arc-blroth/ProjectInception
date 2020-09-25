@@ -4,6 +4,10 @@ import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.client.mc.QueueProtocol;
 import ai.arcblroth.taterwebz.util.NotKnotClassLoader;
+import com.google.common.net.UrlEscapers;
+import com.jogamp.common.jvm.JNILibLoaderBase;
+import com.jogamp.common.util.cache.TempJarCache;
+import jogamp.common.Debug;
 import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptTailer;
@@ -17,6 +21,7 @@ import org.cef.browser.TaterwebzBrowser;
 import org.cef.callback.CefContextMenuParams;
 import org.cef.callback.CefMenuModel;
 import org.cef.handler.CefContextMenuHandlerAdapter;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
@@ -27,7 +32,7 @@ import org.panda_lang.pandomium.wrapper.PandomiumClient;
 
 import javax.swing.*;
 import java.io.File;
-import java.net.InetSocketAddress;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.ListIterator;
 import java.util.TreeMap;
@@ -67,9 +72,13 @@ public class TaterwebzPandomium extends Pandomium {
     public void initialize(NotKnotClassLoader classLoader) {
         super.initialize();
 
+        // System.setProperty("jogamp.debug.JNILibLoader", "true");
+        // System.setProperty("jogamp.debug.NativeLibrary", "true");
+        // System.setProperty("jogamp.debug.TempJarCache", "true");
+        // System.setProperty("jogamp.debug.JarUtil", "true");
+
         // Patch JOGL native searching because for some reason
         // this breaks when we use a separate process
-        // System.setProperty("jogamp.debug.JNILibLoader", "true");
         classLoader.addClassTransformer("com.jogamp.common.jvm.JNILibLoaderBase", classNode -> {
             classNode.methods.forEach(methodNode -> {
                 if(methodNode.name.equals("addNativeJarLibsWithTempJarCache")) {
@@ -86,6 +95,33 @@ public class TaterwebzPandomium extends Pandomium {
                 }
             });
         });
+
+        // By default, JOGL breaks if we have spaces in the jar path
+        classLoader.addClassTransformer("com.jogamp.common.util.JarUtil", classNode -> {
+            classNode.methods.forEach(methodNode -> {
+                if(methodNode.name.equals("getJarURI")) {
+                    ListIterator<AbstractInsnNode> insns = methodNode.instructions.iterator();
+                    while(insns.hasNext()) {
+                        AbstractInsnNode insn = insns.next();
+                        if(insn instanceof MethodInsnNode && ((MethodInsnNode) insn).name.equals("toURI")) {
+                            MethodInsnNode mInsn = ((MethodInsnNode) insn);
+                            mInsn.setOpcode(Opcodes.INVOKESTATIC);
+                            mInsn.owner = "ai/arcblroth/taterwebz/TaterwebzPandomium";
+                            mInsn.name  = "getJarUtilURI";
+                            mInsn.desc  = "(Ljava/net/URL;)Ljava/net/URI;";
+                        }
+                    }
+                }
+            });
+        });
+
+        TempJarCache.initSingleton();
+        if(!TempJarCache.isInitialized()) {
+            throw new RuntimeException("Could not initialize JOGL TempJarCache!");
+        }
+        if(!JNILibLoaderBase.addNativeJarLibs(new Class[]{Debug.class}, null)) {
+            throw new RuntimeException("Could not initialize JOGL natives!");
+        }
 
     }
 
@@ -195,6 +231,12 @@ public class TaterwebzPandomium extends Pandomium {
                 new String[] {"Chromium Version", getChromiumVersion()},
                 new String[] {"CEF Version", getCefVersion()}
         };
+    }
+
+    // Redirect handler for JarUtil#getJarURI
+    @SuppressWarnings("unused")
+    public static URI getJarUtilURI(URL in) throws MalformedURLException, URISyntaxException {
+        return new URL(UrlEscapers.urlFragmentEscaper().escape(in.toString())).toURI();
     }
 
 }

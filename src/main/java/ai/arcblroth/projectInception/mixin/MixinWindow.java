@@ -1,5 +1,6 @@
 package ai.arcblroth.projectInception.mixin;
 
+import ai.arcblroth.projectInception.ProjectInception;
 import net.minecraft.client.util.Window;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -20,7 +21,9 @@ public class MixinWindow {
         // This is used as a fallback in case the
         // somewhat more brittle transformation
         // in ProjectInceptionEarlyRiser fails
-        glfwHideWindow(handle);
+        if(ProjectInception.IS_INNER) {
+            glfwHideWindow(handle);
+        }
     }
 
 }

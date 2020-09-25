@@ -368,6 +368,7 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
     public void onPaint(CefBrowser cefBrowser, boolean popup, Rectangle[] rectangles, ByteBuffer byteBuffer, int width, int height) {
         //ProjectInception.LOGGER.info("painting");
         GLContext context = this.canvas_.getContext();
+        if(context == null) return;
         context.makeCurrent();
         this.renderer_.onPaint(this.canvas_.getGL().getGL2(), popup, rectangles, byteBuffer, width, height);
 

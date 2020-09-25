@@ -20,6 +20,8 @@ import org.objectweb.asm.tree.*;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -73,7 +75,14 @@ public class ProjectInceptionEarlyRiser implements Runnable {
                             .map(c -> (ModContainer)c)
                             .map(ModContainer::getOriginUrl)
                             .filter(u -> u.getProtocol().equals("file"))
-                            .map(u -> u.toString().substring(6))
+                            .map(u -> {
+                                try {
+                                    return Paths.get(u.toURI());
+                                } catch (URISyntaxException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            })
+                            .map(p -> p.toFile().toString())
                             .forEach(classpath::add);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
@@ -86,7 +95,7 @@ public class ProjectInceptionEarlyRiser implements Runnable {
                 String s = iter.next();
                 if(s.startsWith("-agentlib")) {
                     iter.remove();
-                    iter.add(s.replace("suspend=n", "suspend=y").replace("server=n", "server=y"));
+                    iter.add(s.replace("server=n", "server=y"));
                 }
             }
             commandLine.add("-cp");
