@@ -69,11 +69,16 @@ public class ProjectInception implements ModInitializer {
 				BlockEntityType.Builder.create(TaterwebzBlockEntity::new, TATERWEBZ_BLOCK).build(null));
 
 		if(FabricLoader.getInstance().isModLoaded("techreborn")) {
-			RecipeYeeter.yeetRecipe(new Identifier(MODID, "inception_block_vanilla"));
-			RecipeYeeter.yeetRecipe(new Identifier(MODID, "inception_interface_vanilla"));
+			RecipeYeeter.yeetRecipe(RecipeYeeter.USE_TECHREBORN_RECIPES, new Identifier(MODID, "inception_block_vanilla"));
+			RecipeYeeter.yeetRecipe(RecipeYeeter.USE_TECHREBORN_RECIPES, new Identifier(MODID, "inception_interface_vanilla"));
+			RecipeYeeter.yeetRecipe(RecipeYeeter.DONT_USE_TECHREBORN_RECIPES, new Identifier(MODID, "inception_block_techreborn"));
+			RecipeYeeter.yeetRecipe(RecipeYeeter.DONT_USE_TECHREBORN_RECIPES, new Identifier(MODID, "inception_interface_techreborn"));
 		} else {
 			RecipeYeeter.yeetRecipe(new Identifier(MODID, "inception_block_techreborn"));
 			RecipeYeeter.yeetRecipe(new Identifier(MODID, "inception_interface_techreborn"));
+		}
+		if(!FabricLoader.getInstance().isModLoaded("fabricforfabric")) {
+			RecipeYeeter.yeetRecipe(new Identifier(MODID, "game_block_fabricforfabric"));
 		}
 	}
 

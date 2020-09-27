@@ -8,7 +8,13 @@ import me.shedaniel.clothconfig2.api.ConfigBuilder;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.impl.builders.DropdownMenuBuilder;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.server.integrated.IntegratedServer;
+import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+
+import java.util.Optional;
 
 public class ProjectInceptionConfigScreen implements ModMenuApi {
 
@@ -30,7 +36,7 @@ public class ProjectInceptionConfigScreen implements ModMenuApi {
 
             ConfigCategory inception = builder.getOrCreateCategory(new TranslatableText("config.projectInception.category.inception"));
             inception.addEntry(
-                    buildDPIEntry(entryBuilder, ProjectInceptionConfig.DISPLAY_SCALE, 64,"config.projectInception.inception.dpi")
+                    buildDPIEntry(entryBuilder, ProjectInceptionConfig.DISPLAY_SCALE, 64,"inception.dpi", 3)
                         .setSaveConsumer(newVal -> ProjectInceptionConfig.DISPLAY_SCALE = newVal)
                         .build()
             );
@@ -39,17 +45,33 @@ public class ProjectInceptionConfigScreen implements ModMenuApi {
                             new TranslatableText("config.projectInception.inception.extra_vm_args"),
                             ProjectInceptionConfig.INCEPTION_EXTRA_VM_ARGS
                     )
-                            .setTooltip(new TranslatableText("config.projectInception.inception.extra_vm_args.tooltip"))
+                            .setTooltip(getTooltip("inception.extra_vm_args", 1))
                             .setDefaultValue("")
                             .setSaveConsumer(newVal -> ProjectInceptionConfig.INCEPTION_EXTRA_VM_ARGS = newVal)
                             .build()
             );
+            IntegratedServer server = MinecraftClient.getInstance().getServer();
+            if(FabricLoader.getInstance().isModLoaded("techreborn") && server != null) {
+                inception.addEntry(
+                        entryBuilder.startBooleanToggle(
+                                new TranslatableText("config.projectInception.inception.use_techreborn_recipes"),
+                                ProjectInceptionConfig.USE_TECHREBORN_RECIPES
+                        )
+                                .setTooltip(getTooltip("inception.use_techreborn_recipes", 3))
+                                .setDefaultValue(false)
+                                .setSaveConsumer(newVal -> {
+                                    ProjectInceptionConfig.USE_TECHREBORN_RECIPES = newVal;
+                                    server.getCommandManager().execute(server.getCommandSource(), "reload");
+                                })
+                                .build()
+                );
+            }
             inception.addEntry(
                     entryBuilder.startBooleanToggle(
                             new TranslatableText("config.projectInception.inception.use_faux_inner"),
                             ProjectInceptionConfig.USE_FAUX_INNER
                     )
-                            .setTooltip(new TranslatableText("config.projectInception.inception.use_faux_inner.tooltip"))
+                            .setTooltip(getTooltip("inception.use_faux_inner", 3))
                             .setDefaultValue(false)
                             .setSaveConsumer(newVal -> ProjectInceptionConfig.USE_FAUX_INNER = newVal)
                             .build()
@@ -57,7 +79,7 @@ public class ProjectInceptionConfigScreen implements ModMenuApi {
 
             ConfigCategory taterwebz = builder.getOrCreateCategory(new TranslatableText("config.projectInception.category.taterwebz"));
             taterwebz.addEntry(
-                    buildDPIEntry(entryBuilder, ProjectInceptionConfig.TATERWEBZ_SCALE, 128,"config.projectInception.taterwebz.dpi")
+                    buildDPIEntry(entryBuilder, ProjectInceptionConfig.TATERWEBZ_SCALE, 128,"taterwebz.dpi", 3)
                             .setSaveConsumer(newVal -> ProjectInceptionConfig.TATERWEBZ_SCALE = newVal)
                             .build()
             );
@@ -66,7 +88,7 @@ public class ProjectInceptionConfigScreen implements ModMenuApi {
                             new TranslatableText("config.projectInception.taterwebz.home_page"),
                             ProjectInceptionConfig.TATERWEBZ_HOME_PAGE
                     )
-                            .setTooltip(new TranslatableText("config.projectInception.taterwebz.home_page.tooltip"))
+                            .setTooltip(getTooltip("taterwebz.home_page", 1))
                             .setDefaultValue("https://google.com/")
                             .setSaveConsumer(newVal -> ProjectInceptionConfig.TATERWEBZ_HOME_PAGE = newVal)
                             .build()
@@ -77,15 +99,15 @@ public class ProjectInceptionConfigScreen implements ModMenuApi {
         };
     }
 
-    private static DropdownMenuBuilder<Integer> buildDPIEntry(ConfigEntryBuilder entryBuilder, int top, int defaultVal, String translationKey) {
+    private static DropdownMenuBuilder<Integer> buildDPIEntry(ConfigEntryBuilder entryBuilder, int top, int defaultVal, String translationKey, int tooltipLines) {
         return  entryBuilder.startDropdownMenu(
-                    new TranslatableText(translationKey),
+                    new TranslatableText("config.projectInception." + translationKey),
                     top,
                     ProjectInceptionConfigScreen::stringToInt
                 )
                 .setSelections(ImmutableList.of(8, 16, 32, 64, 128, 256, 512))
                 .setDefaultValue(defaultVal)
-                .setTooltip(new TranslatableText(translationKey + ".tooltip"));
+                .setTooltip(getTooltip(translationKey, tooltipLines));
     }
 
     private static Integer stringToInt(String in) {
@@ -94,6 +116,18 @@ public class ProjectInceptionConfigScreen implements ModMenuApi {
         } catch (NumberFormatException e) {
             return null;
         }
+    }
+
+    private static Optional<Text[]> getTooltip(String optionKey, int lines) {
+        if(lines == 1) {
+            return Optional.of(new Text[] { new TranslatableText("config.projectInception." + optionKey + ".tooltip") });
+        }
+        String prefix = "config.projectInception." + optionKey + ".tooltip_";
+        Text[] out = new Text[lines];
+        for(int i = 1; i <= lines; i++) {
+            out[i - 1] = new TranslatableText(prefix + i);
+        }
+        return Optional.of(out);
     }
 
 }

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "project_inception:inception_block"
+    },
+    {
+      "tag": "fabric:pickaxes"
+    },
+    {
+      "item": "minecraft:crafting_table"
+    },
+    {
+      "item": "minecraft:cocoa_beans"
+    },
+    {
+      "tag": "fabricforfabric:fabrics"
+    }
+  ],
+  "result": {
+    "item": "project_inception:game_block",
+    "count": 1
+  }
+}

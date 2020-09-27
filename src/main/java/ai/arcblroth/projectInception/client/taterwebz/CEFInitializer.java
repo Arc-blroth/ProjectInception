@@ -27,7 +27,6 @@ import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
 public class CEFInitializer implements PostLaunchEntrypoint {
 
     @Override
-    @SuppressWarnings("deprecation")
     public void onPostLaunch(ProgressBar bar) {
         try {
             bar.setText("Project Inception - Loading CEF");

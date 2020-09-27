@@ -12,6 +12,7 @@ public class ProjectInceptionConfig {
 
     public static int DISPLAY_SCALE = 64;
     public static String INCEPTION_EXTRA_VM_ARGS = "";
+    public static boolean USE_TECHREBORN_RECIPES = false;
     // This make the child process not actually init Minecraft
     // so that I can test things without destroying my computer
     public static boolean USE_FAUX_INNER = false;
@@ -36,6 +37,7 @@ public class ProjectInceptionConfig {
             properties.load(fis);
             DISPLAY_SCALE = parseIntOrDefault(properties.getProperty("inception_display_scale"), 64);
             INCEPTION_EXTRA_VM_ARGS = properties.getProperty("inception_extra_vm_args", "");
+            USE_TECHREBORN_RECIPES = parseBooleanOrDefault(properties.getProperty("use_techreborn_recipes"), false);
             USE_FAUX_INNER = parseBooleanOrDefault(properties.getProperty("inception_use_faux_inner"), false);
             TATERWEBZ_SCALE = parseIntOrDefault(properties.getProperty("taterwebz_display_scale"), 128);
             TATERWEBZ_HOME_PAGE = properties.getProperty("taterwebz_home_page", "https://google.com/");
@@ -51,6 +53,7 @@ public class ProjectInceptionConfig {
             Properties properties = new Properties();
             properties.put("inception_display_scale", Integer.toString(DISPLAY_SCALE));
             properties.put("inception_extra_vm_args", INCEPTION_EXTRA_VM_ARGS);
+            properties.put("use_techreborn_recipes", Boolean.toString(USE_TECHREBORN_RECIPES));
             properties.put("inception_use_faux_inner", Boolean.toString(USE_FAUX_INNER));
             properties.put("taterwebz_display_scale", Integer.toString(TATERWEBZ_SCALE));
             properties.put("taterwebz_home_page", TATERWEBZ_HOME_PAGE);

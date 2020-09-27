@@ -31,7 +31,7 @@ public abstract class AbstractDisplayBlock<T extends AbstractDisplayBlockEntity>
 
     public AbstractDisplayBlock(Settings settings, Class<T> blockEntityType) {
         super(settings);
-        setDefaultState(getStateManager().getDefaultState().with(FACING, Direction.NORTH));
+        setDefaultState(getStateManager().getDefaultState().with(FACING, Direction.SOUTH));
         this.blockEntityType = blockEntityType;
     }
 

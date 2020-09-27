@@ -421,11 +421,19 @@ public class TaterwebzBrowser extends CefBrowser_N implements CefRenderHandler {
         return var3;
     }
 
-    @Override
-    public void onPopupShow(CefBrowser var1, boolean var2) {}
 
     @Override
-    public void onPopupSize(CefBrowser var1, Rectangle var2) {}
+    public void onPopupShow(CefBrowser var1, boolean var2) {
+        if (!var2) {
+            this.renderer_.clearPopupRects();
+            this.invalidate();
+        }
+    }
+
+    @Override
+    public void onPopupSize(CefBrowser var1, Rectangle var2) {
+        this.renderer_.onPopupSize(var2);
+    }
 
     @Override
     public void onCursorChange(CefBrowser var1, final int var2) {}

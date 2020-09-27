@@ -1,0 +1,38 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "#GP",
+    "AER",
+    "BGI"
+  ],
+  "key": {
+    "#": {
+      "item": "minecraft:red_dye"
+    },
+    "G": {
+      "item": "minecraft:glass_pane"
+    },
+    "P": {
+      "item": "minecraft:potato"
+    },
+    "A": {
+      "item": "minecraft:green_dye"
+    },
+    "E": {
+      "item": "project_inception:inception_block"
+    },
+    "R": {
+      "item": "minecraft:redstone_torch"
+    },
+    "B": {
+      "item": "minecraft:blue_dye"
+    },
+    "I": {
+      "item": "minecraft:iron_bars"
+    }
+  },
+  "result": {
+    "item": "project_inception:taterwebz_block",
+    "count": 1
+  }
+}
