@@ -6,9 +6,10 @@ import ai.arcblroth.projectInception.block.GameBlock;
 import ai.arcblroth.projectInception.block.TaterwebzBlockEntity;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.api.Environment;
-import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.*;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.BlockEntityRenderDispatcher;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.texture.Sprite;
@@ -17,12 +18,8 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.screen.PlayerScreenHandler;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Matrix4f;
-import net.minecraft.world.World;
-
-import java.util.Random;
 
 @Environment(EnvType.CLIENT)
 public class TaterwebzBlockEntityRenderer extends BlockEntityRenderer<TaterwebzBlockEntity> {
@@ -37,23 +34,11 @@ public class TaterwebzBlockEntityRenderer extends BlockEntityRenderer<TaterwebzB
 
     @Override
     public void render(TaterwebzBlockEntity blockEntity, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light, int overlay) {
-        World world = blockEntity.getWorld();
-        BlockPos pos = blockEntity.getPos();
-        BlockState state = world.getBlockState(pos);
-
-        matrixStack.push();
-        RenderLayer renderLayer = RenderLayers.getBlockLayer(state);
-        VertexConsumer vertexConsumer = vertexConsumers.getBuffer(renderLayer);
-        MinecraftClient.getInstance().getBlockRenderManager().getModelRenderer().render(
-                world,
-                MinecraftClient.getInstance().getBlockRenderManager().getModel(state),
-                state, pos, matrixStack, vertexConsumer,
-                false, new Random(), state.getRenderingSeed(pos),
-                OverlayTexture.DEFAULT_UV);
         if(blockEntity.isController() && blockEntity.isOn() && blockEntity.getGameInstance() != null) {
+            matrixStack.push();
             renderInner(blockEntity, matrixStack, vertexConsumers, light);
+            matrixStack.pop();
         }
-        matrixStack.pop();
     }
 
     private void renderInner(TaterwebzBlockEntity blockEntity, MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light) {

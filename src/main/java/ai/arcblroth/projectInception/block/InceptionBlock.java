@@ -11,7 +11,7 @@ public class InceptionBlock extends HorizontalFacingBlock {
 
     public InceptionBlock(Settings settings) {
         super(settings);
-        setDefaultState(getStateManager().getDefaultState().with(FACING, Direction.NORTH));
+        setDefaultState(getStateManager().getDefaultState().with(FACING, Direction.SOUTH));
     }
 
     @Override
