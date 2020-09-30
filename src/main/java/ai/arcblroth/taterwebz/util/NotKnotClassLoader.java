@@ -90,7 +90,7 @@ public class NotKnotClassLoader extends URLClassLoader {
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         String path = name.replace('.', '/').concat(".class");
-        if(name.startsWith("javax.media") || (!name.startsWith("java") && !name.startsWith("sun"))) {
+        if(name.startsWith("javax.media") || (!name.startsWith("java") && !name.startsWith("sun") && !name.startsWith("jdk"))) {
             InputStream stream = super.getResourceAsStream(path);
             if (stream != null) {
                 try {
