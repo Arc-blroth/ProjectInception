@@ -17,10 +17,7 @@ import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
 
@@ -31,13 +28,28 @@ public class CEFInitializer implements PostLaunchEntrypoint {
         try {
             bar.setText("Project Inception - Loading CEF");
             if(!ProjectInception.IS_INNER) {
+                String gameDir = MinecraftClient.getInstance().runDirectory.getAbsolutePath();
                 ArrayList<String> commandLine = ProjectInceptionEarlyRiser.newCommandLineForForking(false);
+                boolean addedNativesFolder = false;
+                String nativesPath = new File(MinecraftClient.getInstance().runDirectory, "inception-cef" + File.separator + "natives").getAbsolutePath();
+                for (ListIterator<String> iterator = commandLine.listIterator(); iterator.hasNext(); ) {
+                    String s = iterator.next();
+                    if (s.startsWith("-Djava.library.path=")) {
+                        iterator.remove();
+                        iterator.add(s + File.pathSeparator + nativesPath);
+                        addedNativesFolder = true;
+                        break;
+                    }
+                }
+                if(!addedNativesFolder) {
+                    commandLine.add("-Djava.library.path=" + nativesPath);
+                }
                 commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_IS_INNER + "=true");
                 commandLine.add("ai.arcblroth.taterwebz.TaterwebzChild");
                 List<String> cmdArgs = Arrays.asList(ProjectInception.ARGUMENTS);
                 commandLine.addAll(cmdArgs);
                 if (!commandLine.contains("--gameDir")) {
-                    Collections.addAll(commandLine, "--gameDir", MinecraftClient.getInstance().runDirectory.getAbsolutePath());
+                    Collections.addAll(commandLine, "--gameDir", gameDir);
                 }
                 ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS = new ProcessBuilder(commandLine).inheritIO().start();
             } else {

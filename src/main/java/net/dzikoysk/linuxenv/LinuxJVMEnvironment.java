@@ -6,7 +6,6 @@ import com.sun.jna.Native;
 public class LinuxJVMEnvironment {
     
     static {
-        System.out.println("here");
         System.setProperty("jna.boot.library.name", "jnidispatch");
         System.setProperty("jna.nosys", "true");
     }

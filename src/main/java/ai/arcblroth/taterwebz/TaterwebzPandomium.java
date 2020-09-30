@@ -70,6 +70,24 @@ public class TaterwebzPandomium extends Pandomium {
     }
 
     public void initialize(NotKnotClassLoader classLoader) {
+        // we set the library path when launching this JVM
+        // so that we don't need to abuse internal JDK things
+        classLoader.addClassTransformer("org.panda_lang.pandomium.loader.PandomiumLoaderWorker", classNode -> {
+            classNode.methods.forEach(methodNode -> {
+                if(methodNode.name.equals("load")) {
+                    ListIterator<AbstractInsnNode> insns = methodNode.instructions.iterator();
+                    while(insns.hasNext()) {
+                        AbstractInsnNode insn = insns.next();
+                        if(insn instanceof MethodInsnNode && ((MethodInsnNode) insn).name.equals("injectLibraryPath")) {
+                            MethodInsnNode mInsn = ((MethodInsnNode) insn);
+                            mInsn.owner = "ai/arcblroth/taterwebz/TaterwebzPandomium";
+                            break;
+                        }
+                    }
+                }
+            });
+        });
+
         super.initialize();
 
         // System.setProperty("jogamp.debug.JNILibLoader", "true");
@@ -237,6 +255,12 @@ public class TaterwebzPandomium extends Pandomium {
     @SuppressWarnings("unused")
     public static URI getJarUtilURI(URL in) throws MalformedURLException, URISyntaxException {
         return new URL(UrlEscapers.urlFragmentEscaper().escape(in.toString())).toURI();
+    }
+
+    // Redirect handler for SystemUtils#injectLibraryPath
+    @SuppressWarnings("unused")
+    public static void injectLibraryPath(String libraryPath) {
+        // no
     }
 
 }

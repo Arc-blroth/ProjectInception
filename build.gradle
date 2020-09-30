@@ -73,7 +73,7 @@ dependencies {
 		exclude module: "pandomium"
 		exclude module: "panda-framework"
 		exclude module: "panda-utilities"
-                exclude module: "linuxenv"
+        exclude module: "linuxenv"
 	}
 	shadow "org.tukaani:xz:1.6"
 }
