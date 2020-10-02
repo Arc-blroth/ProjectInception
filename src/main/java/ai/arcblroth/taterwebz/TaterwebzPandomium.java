@@ -28,6 +28,7 @@ import org.objectweb.asm.tree.VarInsnNode;
 import org.panda_lang.pandomium.Pandomium;
 import org.panda_lang.pandomium.settings.PandomiumSettings;
 import org.panda_lang.pandomium.settings.PandomiumSettingsBuilder;
+import org.panda_lang.pandomium.util.os.PandomiumOS;
 import org.panda_lang.pandomium.wrapper.PandomiumClient;
 
 import javax.swing.*;
@@ -90,9 +91,9 @@ public class TaterwebzPandomium extends Pandomium {
 
         super.initialize();
 
-        // System.setProperty("jogamp.debug.JNILibLoader", "true");
-        // System.setProperty("jogamp.debug.NativeLibrary", "true");
-        // System.setProperty("jogamp.debug.TempJarCache", "true");
+        System.setProperty("jogamp.debug.JNILibLoader", "true");
+        System.setProperty("jogamp.debug.NativeLibrary", "true");
+        System.setProperty("jogamp.debug.TempJarCache", "true");
         // System.setProperty("jogamp.debug.JarUtil", "true");
 
         // Patch JOGL native searching because for some reason
@@ -137,8 +138,10 @@ public class TaterwebzPandomium extends Pandomium {
         if(!TempJarCache.isInitialized()) {
             throw new RuntimeException("Could not initialize JOGL TempJarCache!");
         }
-        if(!JNILibLoaderBase.addNativeJarLibs(new Class[]{Debug.class}, null)) {
-            throw new RuntimeException("Could not initialize JOGL natives!");
+        if(PandomiumOS.isWindows()) {
+            if (!JNILibLoaderBase.addNativeJarLibs(new Class[]{Debug.class}, null)) {
+                throw new RuntimeException("Could not initialize JOGL natives!");
+            }
         }
 
     }
@@ -260,7 +263,7 @@ public class TaterwebzPandomium extends Pandomium {
     // Redirect handler for SystemUtils#injectLibraryPath
     @SuppressWarnings("unused")
     public static void injectLibraryPath(String libraryPath) {
-        // no
+        System.setProperty("java.library.path", libraryPath);
     }
 
 }
