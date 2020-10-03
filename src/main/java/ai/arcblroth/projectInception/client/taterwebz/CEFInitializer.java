@@ -18,6 +18,7 @@ import net.openhft.chronicle.wire.DocumentContext;
 
 import java.io.File;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
 
@@ -51,6 +52,8 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                 if (!commandLine.contains("--gameDir")) {
                     Collections.addAll(commandLine, "--gameDir", gameDir);
                 }
+                System.out.println("\n\n\n\n");
+                System.out.println(commandLine.stream().map(s -> "\"" + s + "\" ").collect(Collectors.joining()));
                 ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS = new ProcessBuilder(commandLine).inheritIO().start();
             } else {
                 bar.setProgress(0.5F);

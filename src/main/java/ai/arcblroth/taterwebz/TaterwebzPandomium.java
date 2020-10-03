@@ -8,6 +8,7 @@ import com.google.common.net.UrlEscapers;
 import com.jogamp.common.jvm.JNILibLoaderBase;
 import com.jogamp.common.util.cache.TempJarCache;
 import jogamp.common.Debug;
+import net.dzikoysk.linuxenv.LinuxJVMEnvironment;
 import net.openhft.chronicle.bytes.Bytes;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptTailer;
@@ -26,9 +27,11 @@ import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.VarInsnNode;
 import org.panda_lang.pandomium.Pandomium;
+import org.panda_lang.pandomium.loader.PandomiumProgressListener;
 import org.panda_lang.pandomium.settings.PandomiumSettings;
 import org.panda_lang.pandomium.settings.PandomiumSettingsBuilder;
 import org.panda_lang.pandomium.util.os.PandomiumOS;
+import org.panda_lang.pandomium.wrapper.PandomiumCEF;
 import org.panda_lang.pandomium.wrapper.PandomiumClient;
 
 import javax.swing.*;
@@ -54,7 +57,8 @@ public class TaterwebzPandomium extends Pandomium {
             File nativesFolder = new File("natives");
             boolean shouldDeleteNativesFolder = !nativesFolder.exists();
             PandomiumSettingsBuilder settingsBuilder = PandomiumSettings.getDefaultSettingsBuilder();
-            settingsBuilder.nativeDirectory(TaterwebzChild.OPTIONS.runDirectory.getAbsolutePath() + File.separator + "inception-cef" + File.separator + "natives");
+            String nativesPath = TaterwebzChild.OPTIONS.runDirectory.getAbsolutePath() + File.separator + "inception-cef" + File.separator + "natives";
+            settingsBuilder.nativeDirectory(nativesPath);
             if (shouldDeleteNativesFolder) {
                 nativesFolder.delete();
             }
@@ -65,6 +69,12 @@ public class TaterwebzPandomium extends Pandomium {
             PandomiumSettings settings = settingsBuilder.build();
             settings.getCefSettings().log_severity = CefSettings.LogSeverity.LOGSEVERITY_DISABLE;
             settings.getCefSettings().windowless_rendering_enabled = true;
+            if(PandomiumOS.isLinux()) {
+                // fix upstream https://bitbucket.org/chromiumembedded/java-cef/issues/248/1205-052222-error-icu_utilcc-173-invalid
+                LinuxJVMEnvironment env = new LinuxJVMEnvironment();
+                env.setJVMEnvironmentVariable("DIR_EXE", nativesPath, 1);
+                env.setJVMEnvironmentVariable("DIR_MODULE", nativesPath, 1);
+            }
             return settings;
         }).get());
         browsers = new TreeMap<>();
