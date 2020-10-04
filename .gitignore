@@ -20,6 +20,9 @@ bin/
 .classpath
 .project
 
+# vs
+.vs/
+
 # fabric
 
 run/**

@@ -7,6 +7,8 @@ import ai.arcblroth.projectInception.client.AbstractGameInstance;
 import ai.arcblroth.projectInception.postlaunch.PostLaunchEntrypoint;
 import ai.arcblroth.projectInception.postlaunch.ProgressBar;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
@@ -15,8 +17,12 @@ import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
+import org.panda_lang.pandomium.util.os.PandomiumOS;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,6 +57,14 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                 commandLine.addAll(cmdArgs);
                 if (!commandLine.contains("--gameDir")) {
                     Collections.addAll(commandLine, "--gameDir", gameDir);
+                }
+                if(PandomiumOS.isLinux()) {
+                    String libprojectinception = extractLibProjectInception(nativesPath);
+                    ArrayList<String> preCommandLine = new ArrayList<>();
+                    preCommandLine.add("/usr/bin/env");
+                    preCommandLine.add("LD_PRELOAD=" + libprojectinception);
+                    preCommandLine.add("PROJECT_INCEPTION_PROC_SELF_EXE=" + nativesPath + File.separator + "jcef_helper");
+                    commandLine.addAll(preCommandLine);
                 }
                 System.out.println("\n\n\n\n");
                 System.out.println(commandLine.stream().map(s -> "\"" + s + "\" ").collect(Collectors.joining()));
@@ -139,6 +153,26 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                 throw new CrashException(crashReport);
             });
         }
+    }
+
+    private String extractLibProjectInception(String nativesPath) throws Throwable {
+        String file = "libprojectinception" + (MinecraftClient.getInstance().is64Bit() ? "-x64" : "") + ".so";
+        ModContainer modContainer = FabricLoader.getInstance().getModContainer(ProjectInception.MODID).get();
+
+        File nativesFolder = new File(nativesPath);
+        if(!nativesFolder.mkdirs()) {
+            throw new IOException("Could not make natives directory");
+        }
+        File out = new File(nativesFolder, file);
+        if(!out.createNewFile()) {
+            throw new IOException("Could not extract libprojectinception");
+        }
+        try(FileChannel fic = new FileInputStream(modContainer.getPath(file).toFile()).getChannel()) {
+            try(FileChannel foc = new FileInputStream(out).getChannel()) {
+                fic.transferTo(0, fic.size(), foc);
+            }
+        }
+        return out.getAbsolutePath();
     }
 
     private static void sleep(long time) {

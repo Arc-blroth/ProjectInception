@@ -85,7 +85,27 @@ def getActualNestedJars = {
 	result
 }
 
+/**
+ * add our readlink() library to the jar, which fixes
+ * chromium's weird resource searching process (see issue-2.md)
+ * This is LD_PRELOAD'ed by the mod at runtime on Linux systems.
+ */
+def getLibProjectInception(boolean is64) {
+	def nativeBuildDir = project("native").getBuildDir()
+	def arch = is64 ? "x86-64" : "x86"
+	def libprojectinception = new File(nativeBuildDir, "lib/main/release/${arch}/libprojectinception.so")
+	if(libprojectinception.exists()) {
+		return libprojectinception
+	} else {
+		getLogger().error("libprojectinception.so for ${arch} was not built. "
+				+ "ProjectInception will not run correctly on Linux systems!")
+		return []
+	}
+}
+
 processResources {
+	dependsOn ":native:assembleRelease"
+
 	from(sourceSets.main.resources.srcDirs) {
 		include "fabric.mod.json"
 		expand ([
@@ -101,6 +121,10 @@ processResources {
 		into "META-INF/jars/"
 	}
 
+	from({ getLibProjectInception(false) })
+	from({ getLibProjectInception(true)  }) {
+		rename { "libprojectinception-x64.so" }
+	}
 }
 
 minecraft {
