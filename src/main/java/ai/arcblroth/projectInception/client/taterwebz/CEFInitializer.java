@@ -20,8 +20,10 @@ import net.openhft.chronicle.wire.DocumentContext;
 import org.panda_lang.pandomium.util.os.PandomiumOS;
 
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -64,7 +66,7 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                     preCommandLine.add("/usr/bin/env");
                     preCommandLine.add("LD_PRELOAD=" + libprojectinception);
                     preCommandLine.add("PROJECT_INCEPTION_PROC_SELF_EXE=" + nativesPath + File.separator + "jcef_helper");
-                    commandLine.addAll(preCommandLine);
+                    commandLine.addAll(0, preCommandLine);
                 }
                 System.out.println("\n\n\n\n");
                 System.out.println(commandLine.stream().map(s -> "\"" + s + "\" ").collect(Collectors.joining()));
@@ -160,16 +162,21 @@ public class CEFInitializer implements PostLaunchEntrypoint {
         ModContainer modContainer = FabricLoader.getInstance().getModContainer(ProjectInception.MODID).get();
 
         File nativesFolder = new File(nativesPath);
-        if(!nativesFolder.mkdirs()) {
-            throw new IOException("Could not make natives directory");
-        }
         File out = new File(nativesFolder, file);
-        if(!out.createNewFile()) {
-            throw new IOException("Could not extract libprojectinception");
-        }
-        try(FileChannel fic = new FileInputStream(modContainer.getPath(file).toFile()).getChannel()) {
-            try(FileChannel foc = new FileInputStream(out).getChannel()) {
-                fic.transferTo(0, fic.size(), foc);
+        if (!out.exists()) {
+            if(!nativesFolder.exists()) {
+                if (!nativesFolder.mkdirs()) {
+                    throw new IOException("Could not make natives directory");
+                }
+            }
+            if (!out.createNewFile()) {
+                throw new IOException("Could not extract libprojectinception");
+            }
+
+            try (InputStream is = modContainer.getRootPath().resolve(file).toUri().toURL().openStream()) {
+                try (FileChannel foc = new FileOutputStream(out).getChannel()) {
+                    foc.transferFrom(Channels.newChannel(is), 0, Long.MAX_VALUE);
+                }
             }
         }
         return out.getAbsolutePath();
