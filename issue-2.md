@@ -52,5 +52,13 @@ with a `readlink` to `/proc/self/exe`. This is our culprit - under the JVM, this
 the location of `libcef.so`, which is what we want it to resolve to.
 There are few solutions to this problem, but perhaps the easiest is
 to simply intercept the `readlink` call using the magic of `LD_PRELOAD`.
-
 http://www.goldsborough.me/c/low-level/kernel/2016/08/29/16-48-53-the_-ld_preload-_trick/
+
+## Part 4 - ld Inconsistency
+Problem: "Inconsistency detected by ld.so: dl-lookup.c: 111: check_match:
+          Assertion `version->filename == NULL || ! _dl_name_match_p
+          (version->filename, map)' failed!"
+Culprit: ???
+This is a relatively obscure bug in AWT that affects specific builds of openjdk.
+https://bugs.launchpad.net/ubuntu/+source/openjdk-lts/+bug/1838740
+The only real solution is, unfortunatly, to use a different jdk.
