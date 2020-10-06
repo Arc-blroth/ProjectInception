@@ -189,7 +189,9 @@ public class CEFInitializer implements PostLaunchEntrypoint {
 
     private void checkOpenJDK() {
         if(!PandomiumOS.isLinux()) return;
-        if(!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_9)) return;
+        // openjdk 8 and lower seem to work
+        String version = System.getProperty("java.version");
+        if(version != null && version.startsWith("1.")) return;
         try {
             // http://www.jcgonzalez.com/linux-get-distro-from-java-examples
             File dir = new File("/etc/");
@@ -212,8 +214,9 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                     if(isUbuntu) {
                         String vmName = System.getProperty("java.vm.name");
                         String vendor = System.getProperty("java.vendor");
-                        if(vmName != null) {
+                        if(vmName != null && vendor != null) {
                             vmName = vmName.toLowerCase();
+                            vendor = vendor.toLowerCase();
                             if(vmName.contains("openjdk") && !vendor.contains("adoptopenjdk")) {
                                 MinecraftClient client = MinecraftClient.getInstance();
                                 Screen titleScreen = client.currentScreen;
@@ -229,6 +232,7 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                                        client.stop();
                                    } else {
                                        synchronized (canContinue) {
+                                       	 canContinue.set(true);
                                            canContinue.notify();
                                        }
                                    }
