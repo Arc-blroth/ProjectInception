@@ -214,14 +214,17 @@ public class TaterwebzPandomium extends Pandomium {
                 SwingUtilities.invokeAndWait(() -> {
                     try {
                         for (TaterwebzBrowser browser : browsers.values()) {
-                            browser.handleEvents();
-                            browser.render();
+                            if(browser != null) { // ??
+                            	  browser.handleEvents();
+                                browser.render();
+                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 });
 
+                if (PANDOMIUM_CLIENT.getCefClient().isDisposed_) break;
                 CefApp.getInstance().N_DoMessageLoopWork();
 
                 Thread.sleep(1000 / 60);
