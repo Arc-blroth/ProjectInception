@@ -10,6 +10,9 @@
   "message.project_inception.loading": "[Project Inception] Loading Minecraft, please wait...",
 
   "gui.project_inception.go": "Go",
+  "gui.project_inception.incompatible_jre.title": "Warning: Incompatible JRE Detected?",
+  "gui.project_inception.incompatible_jre.desc_1": "Due to an obscure bug in Java\n",
+  "gui.project_inception.incompatible_jre.desc_2": ",\nProject Inception may not work on the default Ubuntu OpenJDK packages. If embedded browsers fail to launch, please try using a JRE/JDK build from AdoptOpenJDK. (You can disable this warning in the config)",
 
   "message.project_inception.splash1": "Project Inception!",
   "message.project_inception.splash2": "A dream within a dream...",
@@ -45,5 +48,8 @@
   "config.projectInception.taterwebz.dpi.tooltip_2": "Note that setting this value too high may result in",
   "config.projectInception.taterwebz.dpi.tooltip_3": "slower rendering or rendering issues.",
   "config.projectInception.taterwebz.home_page": "Taterwebz Home Page",
-  "config.projectInception.taterwebz.home_page.tooltip": "The home page for new taterwebz browsers."
+  "config.projectInception.taterwebz.home_page.tooltip": "The home page for new taterwebz browsers.",
+  "config.projectInception.taterwebz.warn_incompatible_jre": "Warn on Incompatible JREs",
+  "config.projectInception.taterwebz.warn_incompatible_jre.tooltip_1": "Shows a screen while loading if a possibly incompatible",
+  "config.projectInception.taterwebz.warn_incompatible_jre.tooltip_2": "Java 9+ OpenJDK build for Ubuntu is used."
 }

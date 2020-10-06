@@ -4,12 +4,15 @@ import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.client.AbstractGameInstance;
+import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
 import ai.arcblroth.projectInception.postlaunch.PostLaunchEntrypoint;
 import ai.arcblroth.projectInception.postlaunch.ProgressBar;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.screen.Overlay;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
@@ -17,16 +20,15 @@ import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
+import org.apache.commons.lang3.JavaVersion;
+import org.apache.commons.lang3.SystemUtils;
 import org.panda_lang.pandomium.util.os.PandomiumOS;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.util.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
 
@@ -37,6 +39,7 @@ public class CEFInitializer implements PostLaunchEntrypoint {
         try {
             bar.setText("Project Inception - Loading CEF");
             if(!ProjectInception.IS_INNER) {
+                bar.setProgress(0.01F);
                 String gameDir = MinecraftClient.getInstance().runDirectory.getAbsolutePath();
                 ArrayList<String> commandLine = ProjectInceptionEarlyRiser.newCommandLineForForking(false);
                 boolean addedNativesFolder = false;
@@ -67,9 +70,11 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                     preCommandLine.add("LD_PRELOAD=" + libprojectinception);
                     preCommandLine.add("PROJECT_INCEPTION_PROC_SELF_EXE=" + nativesPath + File.separator + "jcef_helper");
                     commandLine.addAll(0, preCommandLine);
+
+                    if(ProjectInceptionConfig.WARN_INCOMPATIBLE_JRE) {
+                        checkOpenJDK();
+                    }
                 }
-                System.out.println("\n\n\n\n");
-                System.out.println(commandLine.stream().map(s -> "\"" + s + "\" ").collect(Collectors.joining()));
                 ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS = new ProcessBuilder(commandLine).inheritIO().start();
             } else {
                 bar.setProgress(0.5F);
@@ -180,6 +185,70 @@ public class CEFInitializer implements PostLaunchEntrypoint {
             }
         }
         return out.getAbsolutePath();
+    }
+
+    private void checkOpenJDK() {
+        if(!PandomiumOS.isLinux()) return;
+        if(!SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_9)) return;
+        try {
+            // http://www.jcgonzalez.com/linux-get-distro-from-java-examples
+            File dir = new File("/etc/");
+            if (dir.exists()) {
+                File[] fileList = dir.listFiles((dir1, filename) -> filename.endsWith("-release"));
+                boolean isUbuntu = false;
+                for (File f : fileList) {
+                    try(BufferedReader reader = new BufferedReader(new FileReader(f))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            line = line.toLowerCase();
+                            if(line.startsWith("id=") && line.contains("ubuntu")) {
+                                isUbuntu = true;
+                                break;
+                            }
+                        }
+                    } catch (Exception e) {
+                        return;
+                    }
+                    if(isUbuntu) {
+                        String vmName = System.getProperty("java.vm.name");
+                        String vendor = System.getProperty("java.vendor");
+                        if(vmName != null) {
+                            vmName = vmName.toLowerCase();
+                            if(vmName.contains("openjdk") && !vendor.contains("adoptopenjdk")) {
+                                MinecraftClient client = MinecraftClient.getInstance();
+                                Screen titleScreen = client.currentScreen;
+                                Overlay splashScreen = client.overlay;
+                                AtomicBoolean canContinue = new AtomicBoolean(false);
+                                client.currentScreen = new IncompatibleJREWarningScreen(yes -> {
+                                    if(client.currentScreen != null) {
+                                        client.currentScreen.removed();
+                                    }
+                                    client.overlay = splashScreen;
+                                    client.currentScreen = titleScreen;
+                                   if(!yes) {
+                                       client.stop();
+                                   } else {
+                                       synchronized (canContinue) {
+                                           canContinue.notify();
+                                       }
+                                   }
+                                });
+                                client.currentScreen.init(client, client.getWindow().getScaledWidth(), client.getWindow().getScaledHeight());
+                                client.overlay = null;
+                                client.skipGameRender = false;
+                                synchronized (canContinue) {
+                                    while(!canContinue.get()) {
+                                        canContinue.wait();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            ProjectInception.LOGGER.warn("Exception while checking for incompatible JRE: ", e);
+        }
     }
 
     private static void sleep(long time) {

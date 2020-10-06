@@ -93,6 +93,18 @@ public class ProjectInceptionConfigScreen implements ModMenuApi {
                             .setSaveConsumer(newVal -> ProjectInceptionConfig.TATERWEBZ_HOME_PAGE = newVal)
                             .build()
             );
+            inception.addEntry(
+                    entryBuilder.startBooleanToggle(
+                            new TranslatableText("config.projectInception.taterwebz.warn_incompatible_jre"),
+                            ProjectInceptionConfig.WARN_INCOMPATIBLE_JRE
+                    )
+                            .setTooltip(getTooltip("taterwebz.warn_incompatible_jre", 1))
+                            .setDefaultValue(true)
+                            .setSaveConsumer(newVal -> ProjectInceptionConfig.WARN_INCOMPATIBLE_JRE = newVal)
+                            .requireRestart()
+                            .build()
+            );
+
 
             builder.setSavingRunnable(ProjectInceptionConfig::save);
             return builder.build();

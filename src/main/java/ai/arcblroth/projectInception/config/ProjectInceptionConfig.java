@@ -19,6 +19,7 @@ public class ProjectInceptionConfig {
 
     public static int TATERWEBZ_SCALE = 128;
     public static String TATERWEBZ_HOME_PAGE = "https://google.com/";
+    public static boolean WARN_INCOMPATIBLE_JRE = true;
 
     private static File getConfigFile() throws IOException {
         File f = FabricLoader.getInstance().getConfigDir().resolve("project_inception.cfg").toFile();
@@ -41,6 +42,7 @@ public class ProjectInceptionConfig {
             USE_FAUX_INNER = parseBooleanOrDefault(properties.getProperty("inception_use_faux_inner"), false);
             TATERWEBZ_SCALE = parseIntOrDefault(properties.getProperty("taterwebz_display_scale"), 128);
             TATERWEBZ_HOME_PAGE = properties.getProperty("taterwebz_home_page", "https://google.com/");
+            WARN_INCOMPATIBLE_JRE = parseBooleanOrDefault(properties.getProperty("warn_incompatible_jre"), true);
             fis.close();
         } catch (IOException e) {
             throw new RuntimeException("Failed to load config!");
@@ -57,6 +59,7 @@ public class ProjectInceptionConfig {
             properties.put("inception_use_faux_inner", Boolean.toString(USE_FAUX_INNER));
             properties.put("taterwebz_display_scale", Integer.toString(TATERWEBZ_SCALE));
             properties.put("taterwebz_home_page", TATERWEBZ_HOME_PAGE);
+            properties.put("warn_incompatible_jre", Boolean.toString(WARN_INCOMPATIBLE_JRE));
             FileOutputStream fos = new FileOutputStream(configFile);
             properties.store(fos, "Project Inception Config");
             fos.close();
