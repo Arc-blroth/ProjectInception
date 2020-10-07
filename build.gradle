@@ -1,5 +1,6 @@
 plugins {
 	id 'fabric-loom' version '0.5.9'
+	id 'com.github.johnrengelman.shadow' version '6.0.0'
 	id 'maven-publish'
 }
 
@@ -25,7 +26,7 @@ repositories {
 }
 
 configurations {
-	transitiveInclude
+	nest
 }
 
 dependencies {
@@ -38,7 +39,7 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	modImplementation "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
-	include "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
+	nest "com.github.Chocohead:Fabric-ASM:${project.mm_version}"
 	modApi("io.github.prospector:modmenu:${project.modmenu_version}")  {
 		exclude group: "net.fabricmc.fabric-api"
 	}
@@ -49,18 +50,14 @@ dependencies {
 	modApi("me.shedaniel.cloth:config-2:${project.cloth_config_version}") {
 		exclude(group: "net.fabricmc.fabric-api")
 	}
-	include("me.shedaniel.cloth:config-2:${project.cloth_config_version}")  {
+	nest("me.shedaniel.cloth:config-2:${project.cloth_config_version}")  {
 		exclude(group: "net.fabricmc.fabric-api")
 	}
 
 	implementation "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
-	transitiveInclude("net.openhft:chronicle-queue:${project.chronicle_queue_version}") {
-		exclude(group: "net.java.dev.jna")
-	}
-
+	shadow "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
 	implementation "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
-	include "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
-
+	shadow "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
 	// All of Pandomium is loaded dynamically in dev
 	compileOnly("org.panda-lang:pandomium:${project.pandomium_version}") {
 		exclude group: "org.slf4j"
@@ -78,16 +75,14 @@ dependencies {
 		exclude module: "panda-utilities"
         exclude module: "linuxenv"
 	}
-	include "org.tukaani:xz:1.8"
+	shadow "org.tukaani:xz:1.6"
+}
 
-	Set<String> allTransitiveDependencies = []
-	def addTransitive
-	addTransitive = { ResolvedDependency dep ->
-		allTransitiveDependencies.add(dep.name)
-		if(dep.children.size() > 0) dep.children.forEach addTransitive
-	}
-	configurations.transitiveInclude.resolvedConfiguration.firstLevelModuleDependencies.forEach addTransitive
-	allTransitiveDependencies.forEach { add("include", it) }
+def getActualNestedJars = {
+	def specifiedDependencies = configurations.nest.dependencies.collect { it.name + "-" + it.version + ".jar" }
+	def result = configurations.nest.resolve()
+	result.removeIf { !specifiedDependencies.contains(it.name) }
+	result
 }
 
 /**
@@ -122,6 +117,10 @@ processResources {
 		exclude "fabric.mod.json"
 	}
 
+	from(getActualNestedJars) {
+		into "META-INF/jars/"
+	}
+
 	from({ getLibProjectInception(false) })
 	from({ getLibProjectInception(true)  }) {
 		rename { "libprojectinception-x64.so" }
@@ -151,13 +150,49 @@ jar {
 	from "LICENSE"
 }
 
+task removeStuffForShadowJar(type: Delete) {
+	delete { // closure for lazy evaluation
+		configurations.nest.collect { "${buildDir}/resources/main/META-INF/jars/" + it.getName() }
+	}
+}
+
+// Shadow Jar stuff based from Hephaestus-Dev
+shadowJar {
+	dependsOn removeStuffForShadowJar
+
+	configurations = [project.configurations.shadow]
+	archiveClassifier.set('shadow')
+
+	// idk why these packages exist in the jar
+	exclude 'com/sun/jna/**'
+	exclude 'java/**'
+	exclude 'org/intellij/**'
+	exclude 'org/jetbrains/**'
+}
+
+remapJar {
+	dependsOn shadowJar
+	input.set shadowJar.archiveFile.get()
+	archiveClassifier.set('remap')
+}
+
+task reshadowJar(type: Jar) {
+	dependsOn remapJar
+	from zipTree(remapJar.archiveFile.get())
+	from(getActualNestedJars) {
+		into "META-INF/jars/"
+	}
+}
+
+assemble.dependsOn reshadowJar
+
 // configure the maven publication
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
 			// add all the jars that should be included when publishing to maven
-			artifact(remapJar) {
-				builtBy remapJar
+			artifact(reshadowJar) {
+				builtBy reshadowJar
 			}
 			//artifact(sourcesJar) {
 			//	builtBy remapSourcesJar
