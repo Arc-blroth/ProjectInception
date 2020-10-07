@@ -101,9 +101,6 @@ public class ProjectInceptionEarlyRiser implements Runnable {
             commandLine.add("-cp");
             commandLine.add(System.getProperty("java.class.path"));
         }
-        if(System.getProperty("java.library.path").length() > 0) {
-            commandLine.add("-Djava.library.path=" + System.getProperty("java.library.path"));
-        }
         return commandLine;
     }
 

@@ -215,7 +215,7 @@ public class TaterwebzPandomium extends Pandomium {
                     try {
                         for (TaterwebzBrowser browser : browsers.values()) {
                             if(browser != null) { // ??
-                            	  browser.handleEvents();
+                                browser.handleEvents();
                                 browser.render();
                             }
                         }

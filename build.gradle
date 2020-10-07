@@ -56,8 +56,11 @@ dependencies {
 
 	implementation "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
 	shadow "net.openhft:chronicle-queue:${project.chronicle_queue_version}"
-	implementation "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
-	shadow "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
+
+	// Workaround issue #4 for now
+	//implementation "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
+	//shadow "org.slf4j:slf4j-log4j12:${project.slf4j_bridge_version}"
+
 	// All of Pandomium is loaded dynamically in dev
 	compileOnly("org.panda-lang:pandomium:${project.pandomium_version}") {
 		exclude group: "org.slf4j"
@@ -75,7 +78,7 @@ dependencies {
 		exclude module: "panda-utilities"
         exclude module: "linuxenv"
 	}
-	shadow "org.tukaani:xz:1.6"
+	shadow "org.tukaani:xz:1.8"
 }
 
 def getActualNestedJars = {

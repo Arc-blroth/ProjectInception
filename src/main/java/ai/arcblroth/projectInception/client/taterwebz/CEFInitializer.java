@@ -20,7 +20,6 @@ import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
-import org.panda_lang.pandomium.util.os.PandomiumOS;
 
 import java.io.*;
 import java.nio.channels.Channels;
@@ -31,6 +30,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
 
 public class CEFInitializer implements PostLaunchEntrypoint {
+
+    private static final boolean isLinux = System.getProperty("os.name").toLowerCase().startsWith("linux");
 
     @Override
     public void onPostLaunch(ProgressBar bar) {
@@ -61,7 +62,7 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                 if (!commandLine.contains("--gameDir")) {
                     Collections.addAll(commandLine, "--gameDir", gameDir);
                 }
-                if(PandomiumOS.isLinux()) {
+                if(isLinux) {
                     String libprojectinception = extractLibProjectInception(nativesPath);
                     ArrayList<String> preCommandLine = new ArrayList<>();
                     preCommandLine.add("/usr/bin/env");
@@ -186,7 +187,7 @@ public class CEFInitializer implements PostLaunchEntrypoint {
     }
 
     private void checkOpenJDK() {
-        if(!PandomiumOS.isLinux()) return;
+        if(!isLinux) return;
         // openjdk 8 and lower seem to work
         String version = System.getProperty("java.version");
         if(version != null && version.startsWith("1.")) return;
