@@ -8,11 +8,16 @@ import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
 import ai.arcblroth.projectInception.postlaunch.PostLaunchEntrypoint;
 import ai.arcblroth.projectInception.postlaunch.ProgressBar;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.screen.Overlay;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
@@ -40,7 +45,7 @@ public class CEFInitializer implements PostLaunchEntrypoint {
             if(!ProjectInception.IS_INNER) {
                 bar.setProgress(0.01F);
                 String gameDir = MinecraftClient.getInstance().runDirectory.getAbsolutePath();
-                ArrayList<String> commandLine = ProjectInceptionEarlyRiser.newCommandLineForForking(false);
+                ArrayList<String> commandLine = ProjectInceptionEarlyRiser.newCommandLineForForking("taterwebz", false);
                 boolean addedNativesFolder = false;
                 String nativesPath = new File(MinecraftClient.getInstance().runDirectory, "inception-cef" + File.separator + "natives").getAbsolutePath();
                 for (ListIterator<String> iterator = commandLine.listIterator(); iterator.hasNext(); ) {
@@ -149,6 +154,25 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                 bar.setProgress(1);
             }
             AbstractGameInstance.registerShutdownHook();
+
+            if(!ProjectInception.IS_INNER) {
+                final AtomicBoolean childProcessCrashNotifiedYet = new AtomicBoolean(false);
+                ClientTickEvents.START_WORLD_TICK.register((w) -> {
+                    if (!ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS.isAlive() && !childProcessCrashNotifiedYet.get()) {
+                        ChatHud hud = MinecraftClient.getInstance().inGameHud.getChatHud();
+                        StringBuilder seperatorBuilder = new StringBuilder();
+                        int chars = (int) Math.floor((double) hud.getWidth() / hud.getChatScale() / MinecraftClient.getInstance().textRenderer.getWidth("="));
+                        for (int i = 0; i < chars; i++) {
+                            seperatorBuilder.append("=");
+                        }
+                        String seperator = seperatorBuilder.toString();
+                        hud.addMessage(new LiteralText(seperator).formatted(Formatting.RED));
+                        hud.addMessage(new TranslatableText("message.project_inception.taterwebz_crashed").formatted(Formatting.RED));
+                        hud.addMessage(new LiteralText(seperator).formatted(Formatting.RED));
+                        childProcessCrashNotifiedYet.set(true);
+                    }
+                });
+            }
         } catch (Throwable e) {
             bar.setProgress(1);
             e.printStackTrace();

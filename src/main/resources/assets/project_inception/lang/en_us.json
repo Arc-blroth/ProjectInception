@@ -8,6 +8,7 @@
   "message.project_inception.escape": "Press %s to exit.",
   "message.project_inception.empty_hand_warning": "Click with an empty hand to activate.",
   "message.project_inception.loading": "[Project Inception] Loading Minecraft, please wait...",
+  "message.project_inception.taterwebz_crashed": "Warning: the Project Inception browser child process has crashed. Taterwebz browsers will stop working; please restart the game to fix this.",
 
   "gui.project_inception.go": "Go",
   "gui.project_inception.incompatible_jre.title": "Warning: Incompatible JRE Detected?",

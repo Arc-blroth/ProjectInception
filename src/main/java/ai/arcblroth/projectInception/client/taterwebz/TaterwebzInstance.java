@@ -70,7 +70,7 @@ public class TaterwebzInstance extends AbstractGameInstance<TaterwebzBlockEntity
                     QueueProtocol.MessageType type = message.getMessageType();
                     if(type == QueueProtocol.MessageType.SET_PAGE) {
                         QueueProtocol.SetPageMessage spMessage = (QueueProtocol.SetPageMessage) message;
-                        if(spMessage.action == QueueProtocol.SetPageMessage.ACTION_GOTO) {
+                        if(spMessage.action == QueueProtocol.SetPageMessage.ACTION_NOTIFY_GOTO) {
                             lastURL = spMessage.url;
                         }
                     }

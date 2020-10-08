@@ -74,7 +74,7 @@ import java.io.*;
  *     </li>
  *     <li>
  *         {@link MessageType#SET_PAGE} | parent &#8596; child, implemented in send/readParent2Child only | only used for Taterwebz.<br>
- *         <code>byte action // 0 to reload, 1 to go to a URL, 2 to go back, 3 to go forward</code><br>
+ *         <code>byte action // 0 to reload, 1 to go to a URL, 2 to go back, 3 to go forward. 4 notifies the parent of a page change.</code><br>
  *         <code>String url // only set if action is 1</code><br>
  *     </li>
  *     <li>
@@ -188,6 +188,7 @@ public class QueueProtocol {
         public static final byte ACTION_GOTO = 1;
         public static final byte ACTION_BACK = 2;
         public static final byte ACTION_FORWARD = 3;
+        public static final byte ACTION_NOTIFY_GOTO = 4;
 
         public byte action;
         public String url;
@@ -265,7 +266,7 @@ public class QueueProtocol {
             } else if(message instanceof SetPageMessage) {
                 SetPageMessage spMessage = (SetPageMessage) message;
                 b.writeByte(spMessage.action);
-                if(spMessage.action == SetPageMessage.ACTION_GOTO) {
+                if(spMessage.action == SetPageMessage.ACTION_GOTO || spMessage.action == SetPageMessage.ACTION_NOTIFY_GOTO) {
                     b.writeUtf8(spMessage.url);
                 }
             }
@@ -325,7 +326,7 @@ public class QueueProtocol {
         } else if(messageType.equals(MessageType.SET_PAGE)) {
             SetPageMessage spMessage = new SetPageMessage();
             spMessage.action = bytes.readByte();
-            if(spMessage.action == SetPageMessage.ACTION_GOTO) {
+            if(spMessage.action == SetPageMessage.ACTION_GOTO || spMessage.action == SetPageMessage.ACTION_NOTIFY_GOTO) {
                 spMessage.url = bytes.readUtf8();
             }
             return spMessage;
