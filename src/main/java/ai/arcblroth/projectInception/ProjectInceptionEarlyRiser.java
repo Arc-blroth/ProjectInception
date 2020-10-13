@@ -210,6 +210,7 @@ public class ProjectInceptionEarlyRiser implements Runnable {
                 });
             });
         }
+        LOGGER.log(Level.INFO, "Project Inception early initialization done.");
     }
 
     // from EntrypointPatch
