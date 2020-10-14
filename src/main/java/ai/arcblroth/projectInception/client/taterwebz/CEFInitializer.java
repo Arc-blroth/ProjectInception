@@ -31,6 +31,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
 
@@ -79,6 +80,7 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                         checkOpenJDK();
                     }
                 }
+                ProjectInception.LOGGER.info("Running command line:\n" + commandLine.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(" ")));
                 ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS = new ProcessBuilder(commandLine).inheritIO().start();
             } else {
                 bar.setProgress(0.5F);

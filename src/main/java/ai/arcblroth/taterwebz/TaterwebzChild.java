@@ -6,6 +6,7 @@ import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import net.minecraft.util.logging.LoggerPrintStream;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -22,6 +23,9 @@ public class TaterwebzChild {
     public static TaterwebzOptions OPTIONS;
 
     public static void main(String[] args) throws IOException {
+        System.setErr(new LoggerPrintStream("STDERR", System.err));
+        System.setOut(new LoggerPrintStream("STDOUT", System.out));
+
         OPTIONS = new TaterwebzOptions();
 
         OptionParser optionParser = new OptionParser();
