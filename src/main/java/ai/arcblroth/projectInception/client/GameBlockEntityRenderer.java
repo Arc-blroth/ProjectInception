@@ -26,15 +26,17 @@ public class GameBlockEntityRenderer extends BlockEntityRenderer<GameBlockEntity
 
     private static final SpriteIdentifier LOADING = new SpriteIdentifier(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE, new Identifier(ProjectInception.MODID, "block/inception"));
     private static final SpriteIdentifier GENERIC = new SpriteIdentifier(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE, new Identifier(ProjectInception.MODID, "block/generic"));
-    private final Sprite pointerSprite;
+    private Sprite pointerSprite;
 
     public GameBlockEntityRenderer(BlockEntityRenderDispatcher dispatcher) {
         super(dispatcher);
-        this.pointerSprite = MinecraftClient.getInstance().getItemRenderer().getModels().getSprite(ProjectInception.INCEPTION_INTERFACE_ITEM);
     }
 
     @Override
     public void render(GameBlockEntity blockEntity, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light, int overlay) {
+        if(pointerSprite == null) {
+            this.pointerSprite = MinecraftClient.getInstance().getItemRenderer().getModels().getSprite(ProjectInception.INCEPTION_INTERFACE_ITEM);
+        }
         if(blockEntity.isController() && blockEntity.isOn() && blockEntity.getGameInstance() != null) {
             matrixStack.push();
             renderInner(blockEntity, matrixStack, vertexConsumers, light);
