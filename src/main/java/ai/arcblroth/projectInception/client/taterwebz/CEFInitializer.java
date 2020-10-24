@@ -8,11 +8,13 @@ import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
 import ai.arcblroth.projectInception.postlaunch.PostLaunchEntrypoint;
 import ai.arcblroth.projectInception.postlaunch.ProgressBar;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.ChatHud;
+import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Overlay;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.LiteralText;
@@ -31,6 +33,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
@@ -68,6 +71,9 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                 if (!commandLine.contains("--gameDir")) {
                     Collections.addAll(commandLine, "--gameDir", gameDir);
                 }
+                if(!commandLine.contains("-XX:+CompactStrings")) {
+                    checkOpenJ9();
+                }
                 if(isLinux) {
                     String libprojectinception = extractLibProjectInception(nativesPath);
                     ArrayList<String> preCommandLine = new ArrayList<>();
@@ -75,7 +81,6 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                     preCommandLine.add("LD_PRELOAD=" + libprojectinception);
                     preCommandLine.add("PROJECT_INCEPTION_PROC_SELF_EXE=" + nativesPath + File.separator + "jcef_helper");
                     commandLine.addAll(0, preCommandLine);
-
                     if(ProjectInceptionConfig.WARN_INCOMPATIBLE_JRE) {
                         checkOpenJDK();
                     }
@@ -243,33 +248,7 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                             vmName = vmName.toLowerCase();
                             vendor = vendor.toLowerCase();
                             if(vmName.contains("openjdk") && !vendor.contains("adoptopenjdk")) {
-                                MinecraftClient client = MinecraftClient.getInstance();
-                                Screen titleScreen = client.currentScreen;
-                                Overlay splashScreen = client.overlay;
-                                AtomicBoolean canContinue = new AtomicBoolean(false);
-                                client.currentScreen = new IncompatibleJREWarningScreen(yes -> {
-                                    if(client.currentScreen != null) {
-                                        client.currentScreen.removed();
-                                    }
-                                    client.overlay = splashScreen;
-                                    client.currentScreen = titleScreen;
-                                   if(!yes) {
-                                       client.stop();
-                                   } else {
-                                       synchronized (canContinue) {
-                                       	 canContinue.set(true);
-                                           canContinue.notify();
-                                       }
-                                   }
-                                });
-                                client.currentScreen.init(client, client.getWindow().getScaledWidth(), client.getWindow().getScaledHeight());
-                                client.overlay = null;
-                                client.skipGameRender = false;
-                                synchronized (canContinue) {
-                                    while(!canContinue.get()) {
-                                        canContinue.wait();
-                                    }
-                                }
+                                showScreen(IncompatibleJREWarningScreen::new);
                             }
                         }
                     }
@@ -277,6 +256,47 @@ public class CEFInitializer implements PostLaunchEntrypoint {
             }
         } catch (Exception e) {
             ProjectInception.LOGGER.warn("Exception while checking for incompatible JRE: ", e);
+        }
+    }
+
+    private void checkOpenJ9() {
+        String vmName = System.getProperty("java.vm.name").toLowerCase();
+        if(vmName.contains("openj9")) {
+            try {
+                showScreen(OpenJ9WarningScreen::new);
+            } catch (Exception e) {
+                ProjectInception.LOGGER.warn("Exception while checking for OpenJ9 compat: ", e);
+            }
+        }
+    }
+
+    private void showScreen(Function<BooleanConsumer, ConfirmScreen> screenBuilder) throws InterruptedException {
+        MinecraftClient client = MinecraftClient.getInstance();
+        Screen titleScreen = client.currentScreen;
+        Overlay splashScreen = client.overlay;
+        AtomicBoolean canContinue = new AtomicBoolean(false);
+        client.currentScreen = screenBuilder.apply(yes -> {
+            if(client.currentScreen != null) {
+                client.currentScreen.removed();
+            }
+            client.overlay = splashScreen;
+            client.currentScreen = titleScreen;
+            if(!yes) {
+                client.stop();
+            } else {
+                synchronized (canContinue) {
+                    canContinue.set(true);
+                    canContinue.notify();
+                }
+            }
+        });
+        client.currentScreen.init(client, client.getWindow().getScaledWidth(), client.getWindow().getScaledHeight());
+        client.overlay = null;
+        client.skipGameRender = false;
+        synchronized (canContinue) {
+            while(!canContinue.get()) {
+                canContinue.wait();
+            }
         }
     }
 

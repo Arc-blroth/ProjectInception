@@ -8,12 +8,14 @@
   "message.project_inception.escape": "Press %s to exit.",
   "message.project_inception.empty_hand_warning": "Click with an empty hand to activate.",
   "message.project_inception.loading": "[Project Inception] Loading Minecraft, please wait...",
-  "message.project_inception.taterwebz_crashed": "Warning: the Project Inception browser child process has crashed. Taterwebz browsers will stop working; please restart the game to fix this.",
+  "message.project_inception.taterwebz_crashed": "Warning: the Project Inception browser child process has crashed. Taterwebz browsers will stop working; please restart the game to fix this. If the problem persists, please open an issue at https://github.com/Arc-blroth/ProjectInception/issues",
 
   "gui.project_inception.go": "Go",
   "gui.project_inception.incompatible_jre.title": "Warning: Incompatible JRE Detected?",
   "gui.project_inception.incompatible_jre.desc_1": "Due to an obscure bug in Java\n",
   "gui.project_inception.incompatible_jre.desc_2": ",\nProject Inception may not work on the default Ubuntu OpenJDK packages. If embedded browsers fail to launch, please try using a JRE/JDK build from AdoptOpenJDK. (You can disable this warning in the config)",
+  "gui.project_inception.openj9_warning.title": "Warning: OpenJ9 Compatibility",
+  "gui.project_inception.openj9_warning.desc": "To get Project Inception to work on OpenJ9, please add \"-XX:+CompactStrings\" (without the quotes) to the Java VM arguments in the launcher, then restart the game.",
 
   "message.project_inception.splash1": "Project Inception!",
   "message.project_inception.splash2": "A dream within a dream...",

@@ -144,6 +144,7 @@ public class ProjectInceptionEarlyRiser implements Runnable {
                 try {
                     classpath.add(FabricLauncherBase.minecraftJar.toString());
                     FabricLoader.getInstance().getAllMods().stream()
+                            .filter(m -> m.getMetadata().getId().matches("fabric.*|project_inception|mm"))
                             .map(c -> (ModContainer)c)
                             .map(ModContainer::getOriginUrl)
                             .filter(u -> u.getProtocol().equals("file"))
@@ -168,6 +169,9 @@ public class ProjectInceptionEarlyRiser implements Runnable {
                 if(s.startsWith("-agentlib")) {
                     iter.remove();
                     iter.add(s.replace("server=n", "server=y"));
+                }
+                if(s.startsWith("-Djava.class.path")) {
+                    iter.remove();
                 }
             }
             commandLine.add("-cp");
