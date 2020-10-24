@@ -28,6 +28,7 @@ import org.objectweb.asm.tree.VarInsnNode;
 import org.panda_lang.pandomium.Pandomium;
 import org.panda_lang.pandomium.settings.PandomiumSettings;
 import org.panda_lang.pandomium.settings.PandomiumSettingsBuilder;
+import org.panda_lang.pandomium.util.os.PandomiumOS;
 import org.panda_lang.pandomium.wrapper.PandomiumClient;
 
 import javax.swing.*;
@@ -53,7 +54,8 @@ public class TaterwebzPandomium extends Pandomium {
             File nativesFolder = new File("natives");
             boolean shouldDeleteNativesFolder = !nativesFolder.exists();
             PandomiumSettingsBuilder settingsBuilder = PandomiumSettings.getDefaultSettingsBuilder();
-            settingsBuilder.nativeDirectory(TaterwebzChild.OPTIONS.runDirectory.getAbsolutePath() + File.separator + "inception-cef" + File.separator + "natives");
+            String nativesPath = TaterwebzChild.OPTIONS.runDirectory.getAbsolutePath() + File.separator + "inception-cef" + File.separator + "natives";
+            settingsBuilder.nativeDirectory(nativesPath);
             if (shouldDeleteNativesFolder) {
                 nativesFolder.delete();
             }
@@ -70,6 +72,24 @@ public class TaterwebzPandomium extends Pandomium {
     }
 
     public void initialize(NotKnotClassLoader classLoader) {
+        // we set the library path when launching this JVM
+        // so that we don't need to abuse internal JDK things
+        classLoader.addClassTransformer("org.panda_lang.pandomium.loader.PandomiumLoaderWorker", classNode -> {
+            classNode.methods.forEach(methodNode -> {
+                if(methodNode.name.equals("load")) {
+                    ListIterator<AbstractInsnNode> insns = methodNode.instructions.iterator();
+                    while(insns.hasNext()) {
+                        AbstractInsnNode insn = insns.next();
+                        if(insn instanceof MethodInsnNode && ((MethodInsnNode) insn).name.equals("injectLibraryPath")) {
+                            MethodInsnNode mInsn = ((MethodInsnNode) insn);
+                            mInsn.owner = "ai/arcblroth/taterwebz/TaterwebzPandomium";
+                            break;
+                        }
+                    }
+                }
+            });
+        });
+
         super.initialize();
 
         // System.setProperty("jogamp.debug.JNILibLoader", "true");
@@ -119,8 +139,10 @@ public class TaterwebzPandomium extends Pandomium {
         if(!TempJarCache.isInitialized()) {
             throw new RuntimeException("Could not initialize JOGL TempJarCache!");
         }
-        if(!JNILibLoaderBase.addNativeJarLibs(new Class[]{Debug.class}, null)) {
-            throw new RuntimeException("Could not initialize JOGL natives!");
+        if(PandomiumOS.isWindows()) {
+            if (!JNILibLoaderBase.addNativeJarLibs(new Class[]{Debug.class}, null)) {
+                throw new RuntimeException("Could not initialize JOGL natives!");
+            }
         }
 
     }
@@ -192,14 +214,17 @@ public class TaterwebzPandomium extends Pandomium {
                 SwingUtilities.invokeAndWait(() -> {
                     try {
                         for (TaterwebzBrowser browser : browsers.values()) {
-                            browser.handleEvents();
-                            browser.render();
+                            if(browser != null) { // ??
+                                browser.handleEvents();
+                                browser.render();
+                            }
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
                 });
 
+                if (PANDOMIUM_CLIENT.getCefClient().isDisposed_) break;
                 CefApp.getInstance().N_DoMessageLoopWork();
 
                 Thread.sleep(1000 / 60);
@@ -237,6 +262,12 @@ public class TaterwebzPandomium extends Pandomium {
     @SuppressWarnings("unused")
     public static URI getJarUtilURI(URL in) throws MalformedURLException, URISyntaxException {
         return new URL(UrlEscapers.urlFragmentEscaper().escape(in.toString())).toURI();
+    }
+
+    // Redirect handler for SystemUtils#injectLibraryPath
+    @SuppressWarnings("unused")
+    public static void injectLibraryPath(String libraryPath) {
+        System.setProperty("java.library.path", libraryPath);
     }
 
 }

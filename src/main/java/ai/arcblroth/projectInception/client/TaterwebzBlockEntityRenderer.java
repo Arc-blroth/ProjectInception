@@ -25,15 +25,17 @@ import net.minecraft.util.math.Matrix4f;
 public class TaterwebzBlockEntityRenderer extends BlockEntityRenderer<TaterwebzBlockEntity> {
 
     private static final SpriteIdentifier GENERIC = new SpriteIdentifier(PlayerScreenHandler.BLOCK_ATLAS_TEXTURE, new Identifier(ProjectInception.MODID, "block/generic"));
-    private final Sprite pointerSprite;
+    private Sprite pointerSprite;
 
     public TaterwebzBlockEntityRenderer(BlockEntityRenderDispatcher dispatcher) {
         super(dispatcher);
-        this.pointerSprite = MinecraftClient.getInstance().getItemRenderer().getModels().getSprite(ProjectInception.INCEPTION_INTERFACE_ITEM);
     }
 
     @Override
     public void render(TaterwebzBlockEntity blockEntity, float tickDelta, MatrixStack matrixStack, VertexConsumerProvider vertexConsumers, int light, int overlay) {
+        if(pointerSprite == null) {
+            this.pointerSprite = MinecraftClient.getInstance().getItemRenderer().getModels().getSprite(ProjectInception.INCEPTION_INTERFACE_ITEM);
+        }
         if(blockEntity.isController() && blockEntity.isOn() && blockEntity.getGameInstance() != null) {
             matrixStack.push();
             renderInner(blockEntity, matrixStack, vertexConsumers, light);

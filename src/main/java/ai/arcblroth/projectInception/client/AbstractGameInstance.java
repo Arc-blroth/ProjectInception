@@ -20,7 +20,7 @@ import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Level;
-import org.lwjgl.BufferUtils;
+import org.lwjgl.system.MemoryUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -201,8 +201,7 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
         } finally {
             RenderSystem.recordRenderCall(() -> {
                 if(this.lastTextureImage != null) {
-                    // this segfaults Minecraft and I don't know why
-                    // this.lastTextureImage.close();
+                    this.lastTextureImage.close();
                     this.lastTextureImage = null;
                 }
                 this.texture = null;
@@ -238,7 +237,7 @@ public abstract class AbstractGameInstance<T extends AbstractDisplayBlockEntity<
                     texture.rewind();
                 }
                 if (texture == null || texture.capacity() < lastWidth * lastHeight * 4) {
-                    texture = BufferUtils.createByteBuffer(lastWidth * lastHeight * 4);
+                    texture = MemoryUtil.memAlloc(lastWidth * lastHeight * 4);
                 }
                 bytes.read(texture);
                 texture.rewind();

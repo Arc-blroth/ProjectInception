@@ -1,10 +1,10 @@
 package ai.arcblroth.projectInception.mixin;
 
-import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
-import ai.arcblroth.projectInception.util.CyberDragonsUtil;
 import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.client.mc.QueueProtocol;
+import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
+import ai.arcblroth.projectInception.util.CyberDragonsUtil;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Log4J2LoggerFactory;
 import joptsimple.OptionParser;
@@ -37,6 +37,14 @@ public class MixinClientMain {
         SharedConstants.getGameVersion();
 
         ProjectInceptionEarlyRiser.ARGUMENTS = Arrays.copyOf(args, args.length);
+        for(int i = 0; i < ProjectInceptionEarlyRiser.ARGUMENTS.length; i++) {
+            if(ProjectInceptionEarlyRiser.ARGUMENTS[i].startsWith("--accessToken")) {
+                if(i != ProjectInceptionEarlyRiser.ARGUMENTS.length - 1) {
+                    ProjectInceptionEarlyRiser.ARGUMENTS[++i] = "FabricMC";
+                }
+            }
+        }
+
         if(ProjectInceptionEarlyRiser.IS_INNER && ProjectInceptionConfig.USE_FAUX_INNER) {
             try {
                 OptionParser optionParser = new OptionParser();

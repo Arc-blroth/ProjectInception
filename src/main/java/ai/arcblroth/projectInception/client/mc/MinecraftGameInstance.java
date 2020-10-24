@@ -47,8 +47,8 @@ public class MinecraftGameInstance extends AbstractGameInstance<GameBlockEntity>
             }
         }
 
-        ArrayList<String> commandLine = ProjectInceptionEarlyRiser.newCommandLineForForking(true);
         String newInstancePrefix = ProjectInceptionEarlyRiser.INSTANCE_PREFIX + "-" + instanceNumber;
+        ArrayList<String> commandLine = ProjectInceptionEarlyRiser.newCommandLineForForking(newInstancePrefix, true);
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_IS_INNER + "=true");
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_WIDTH + "=" + instanceWidth);
         commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_DISPLAY_HEIGHT + "=" + instanceHeight);

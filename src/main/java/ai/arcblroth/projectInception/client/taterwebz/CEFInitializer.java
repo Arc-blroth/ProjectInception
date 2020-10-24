@@ -4,10 +4,22 @@ import ai.arcblroth.projectInception.ProjectInception;
 import ai.arcblroth.projectInception.ProjectInceptionClient;
 import ai.arcblroth.projectInception.ProjectInceptionEarlyRiser;
 import ai.arcblroth.projectInception.client.AbstractGameInstance;
+import ai.arcblroth.projectInception.config.ProjectInceptionConfig;
 import ai.arcblroth.projectInception.postlaunch.PostLaunchEntrypoint;
 import ai.arcblroth.projectInception.postlaunch.ProgressBar;
 import com.mojang.blaze3d.systems.RenderSystem;
+import it.unimi.dsi.fastutil.booleans.BooleanConsumer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.ModContainer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.hud.ChatHud;
+import net.minecraft.client.gui.screen.ConfirmScreen;
+import net.minecraft.client.gui.screen.Overlay;
+import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.crash.CrashException;
 import net.minecraft.util.crash.CrashReport;
 import net.minecraft.util.crash.CrashReportSection;
@@ -16,29 +28,64 @@ import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.TailerDirection;
 import net.openhft.chronicle.wire.DocumentContext;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.io.*;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static ai.arcblroth.projectInception.client.mc.QueueProtocol.*;
 
 public class CEFInitializer implements PostLaunchEntrypoint {
+
+    private static final boolean isLinux = System.getProperty("os.name").toLowerCase().startsWith("linux");
 
     @Override
     public void onPostLaunch(ProgressBar bar) {
         try {
             bar.setText("Project Inception - Loading CEF");
             if(!ProjectInception.IS_INNER) {
-                ArrayList<String> commandLine = ProjectInceptionEarlyRiser.newCommandLineForForking(false);
+                bar.setProgress(0.01F);
+                String gameDir = MinecraftClient.getInstance().runDirectory.getAbsolutePath();
+                ArrayList<String> commandLine = ProjectInceptionEarlyRiser.newCommandLineForForking("taterwebz", false);
+                boolean addedNativesFolder = false;
+                String nativesPath = new File(MinecraftClient.getInstance().runDirectory, "inception-cef" + File.separator + "natives").getAbsolutePath();
+                for (ListIterator<String> iterator = commandLine.listIterator(); iterator.hasNext(); ) {
+                    String s = iterator.next();
+                    if (s.startsWith("-Djava.library.path=")) {
+                        iterator.remove();
+                        iterator.add(s + File.pathSeparator + nativesPath);
+                        addedNativesFolder = true;
+                        break;
+                    }
+                }
+                if(!addedNativesFolder) {
+                    commandLine.add("-Djava.library.path=" + nativesPath);
+                }
                 commandLine.add("-D" + ProjectInceptionEarlyRiser.ARG_IS_INNER + "=true");
                 commandLine.add("ai.arcblroth.taterwebz.TaterwebzChild");
                 List<String> cmdArgs = Arrays.asList(ProjectInception.ARGUMENTS);
                 commandLine.addAll(cmdArgs);
                 if (!commandLine.contains("--gameDir")) {
-                    Collections.addAll(commandLine, "--gameDir", MinecraftClient.getInstance().runDirectory.getAbsolutePath());
+                    Collections.addAll(commandLine, "--gameDir", gameDir);
                 }
+                if(!commandLine.contains("-XX:+CompactStrings")) {
+                    checkOpenJ9();
+                }
+                if(isLinux) {
+                    String libprojectinception = extractLibProjectInception(nativesPath);
+                    ArrayList<String> preCommandLine = new ArrayList<>();
+                    preCommandLine.add("/usr/bin/env");
+                    preCommandLine.add("LD_PRELOAD=" + libprojectinception);
+                    preCommandLine.add("PROJECT_INCEPTION_PROC_SELF_EXE=" + nativesPath + File.separator + "jcef_helper");
+                    commandLine.addAll(0, preCommandLine);
+                    if(ProjectInceptionConfig.WARN_INCOMPATIBLE_JRE) {
+                        checkOpenJDK();
+                    }
+                }
+                ProjectInception.LOGGER.info("Running command line:\n" + commandLine.stream().map(s -> "\"" + s + "\"").collect(Collectors.joining(" ")));
                 ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS = new ProcessBuilder(commandLine).inheritIO().start();
             } else {
                 bar.setProgress(0.5F);
@@ -114,6 +161,25 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                 bar.setProgress(1);
             }
             AbstractGameInstance.registerShutdownHook();
+
+            if(!ProjectInception.IS_INNER) {
+                final AtomicBoolean childProcessCrashNotifiedYet = new AtomicBoolean(false);
+                ClientTickEvents.START_WORLD_TICK.register((w) -> {
+                    if (!ProjectInceptionClient.TATERWEBZ_CHILD_PROCESS.isAlive() && !childProcessCrashNotifiedYet.get()) {
+                        ChatHud hud = MinecraftClient.getInstance().inGameHud.getChatHud();
+                        StringBuilder seperatorBuilder = new StringBuilder();
+                        int chars = (int) Math.floor((double) hud.getWidth() / hud.getChatScale() / MinecraftClient.getInstance().textRenderer.getWidth("="));
+                        for (int i = 0; i < chars; i++) {
+                            seperatorBuilder.append("=");
+                        }
+                        String seperator = seperatorBuilder.toString();
+                        hud.addMessage(new LiteralText(seperator).formatted(Formatting.RED));
+                        hud.addMessage(new TranslatableText("message.project_inception.taterwebz_crashed").formatted(Formatting.RED));
+                        hud.addMessage(new LiteralText(seperator).formatted(Formatting.RED));
+                        childProcessCrashNotifiedYet.set(true);
+                    }
+                });
+            }
         } catch (Throwable e) {
             bar.setProgress(1);
             e.printStackTrace();
@@ -123,6 +189,114 @@ public class CEFInitializer implements PostLaunchEntrypoint {
                 CrashReport crashReport = new CrashReport("CEF Initialization Failed", e);
                 throw new CrashException(crashReport);
             });
+        }
+    }
+
+    private String extractLibProjectInception(String nativesPath) throws Throwable {
+        String file = "libprojectinception" + (MinecraftClient.getInstance().is64Bit() ? "-x64" : "") + ".so";
+        ModContainer modContainer = FabricLoader.getInstance().getModContainer(ProjectInception.MODID).get();
+
+        File nativesFolder = new File(nativesPath);
+        File out = new File(nativesFolder, file);
+        if (!out.exists()) {
+            if(!nativesFolder.exists()) {
+                if (!nativesFolder.mkdirs()) {
+                    throw new IOException("Could not make natives directory");
+                }
+            }
+            if (!out.createNewFile()) {
+                throw new IOException("Could not extract libprojectinception");
+            }
+
+            try (InputStream is = modContainer.getRootPath().resolve(file).toUri().toURL().openStream()) {
+                try (FileChannel foc = new FileOutputStream(out).getChannel()) {
+                    foc.transferFrom(Channels.newChannel(is), 0, Long.MAX_VALUE);
+                }
+            }
+        }
+        return out.getAbsolutePath();
+    }
+
+    private void checkOpenJDK() {
+        if(!isLinux) return;
+        // openjdk 8 and lower seem to work
+        String version = System.getProperty("java.version");
+        if(version != null && version.startsWith("1.")) return;
+        try {
+            // http://www.jcgonzalez.com/linux-get-distro-from-java-examples
+            File dir = new File("/etc/");
+            if (dir.exists()) {
+                File[] fileList = dir.listFiles((dir1, filename) -> filename.endsWith("-release"));
+                boolean isUbuntu = false;
+                for (File f : fileList) {
+                    try(BufferedReader reader = new BufferedReader(new FileReader(f))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            line = line.toLowerCase();
+                            if(line.startsWith("id=") && line.contains("ubuntu")) {
+                                isUbuntu = true;
+                                break;
+                            }
+                        }
+                    } catch (Exception e) {
+                        return;
+                    }
+                    if(isUbuntu) {
+                        String vmName = System.getProperty("java.vm.name");
+                        String vendor = System.getProperty("java.vendor");
+                        if(vmName != null && vendor != null) {
+                            vmName = vmName.toLowerCase();
+                            vendor = vendor.toLowerCase();
+                            if(vmName.contains("openjdk") && !vendor.contains("adoptopenjdk")) {
+                                showScreen(IncompatibleJREWarningScreen::new);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            ProjectInception.LOGGER.warn("Exception while checking for incompatible JRE: ", e);
+        }
+    }
+
+    private void checkOpenJ9() {
+        String vmName = System.getProperty("java.vm.name").toLowerCase();
+        if(vmName.contains("openj9")) {
+            try {
+                showScreen(OpenJ9WarningScreen::new);
+            } catch (Exception e) {
+                ProjectInception.LOGGER.warn("Exception while checking for OpenJ9 compat: ", e);
+            }
+        }
+    }
+
+    private void showScreen(Function<BooleanConsumer, ConfirmScreen> screenBuilder) throws InterruptedException {
+        MinecraftClient client = MinecraftClient.getInstance();
+        Screen titleScreen = client.currentScreen;
+        Overlay splashScreen = client.overlay;
+        AtomicBoolean canContinue = new AtomicBoolean(false);
+        client.currentScreen = screenBuilder.apply(yes -> {
+            if(client.currentScreen != null) {
+                client.currentScreen.removed();
+            }
+            client.overlay = splashScreen;
+            client.currentScreen = titleScreen;
+            if(!yes) {
+                client.stop();
+            } else {
+                synchronized (canContinue) {
+                    canContinue.set(true);
+                    canContinue.notify();
+                }
+            }
+        });
+        client.currentScreen.init(client, client.getWindow().getScaledWidth(), client.getWindow().getScaledHeight());
+        client.overlay = null;
+        client.skipGameRender = false;
+        synchronized (canContinue) {
+            while(!canContinue.get()) {
+                canContinue.wait();
+            }
         }
     }
 

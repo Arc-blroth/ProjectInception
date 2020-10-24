@@ -1,0 +1,37 @@
+plugins {
+    id 'cpp-library'
+    id 'idea'
+}
+
+library {
+    linkage.set([Linkage.SHARED])
+    targetMachines.set([machines.linux.x86, machines.linux.x86_64])
+    baseName = "projectinception"
+
+    binaries.configureEach {
+        def compileTask = compileTask.get()
+        compileTask.source.from fileTree(dir: "src/main/c", include: "**/*.c")
+        if (toolChain instanceof GccCompatibleToolChain) {
+            compileTask.compilerArgs = ["-x", "c", "-std=c11", "-shared", "-fPIC", "-ldl"]
+        }
+
+        def linkTask = linkTask.get()
+        if (toolChain instanceof GccCompatibleToolChain) {
+            linkTask.linkerArgs = ["-nodefaultlibs", "-lc"]
+        }
+    }
+}
+
+task assembleRelease {
+    dependsOn {
+        tasks.findByName("assembleReleaseX86-64") != null
+            ? ["assembleReleaseX86", "assembleReleaseX86-64"]
+            : []
+    }
+}
+
+idea {
+    module {
+        sourceDirs += file("src/main/c")
+    }
+}

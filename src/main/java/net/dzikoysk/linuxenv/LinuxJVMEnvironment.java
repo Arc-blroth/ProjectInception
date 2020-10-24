@@ -4,25 +4,30 @@ import com.sun.jna.Library;
 import com.sun.jna.Native;
 
 public class LinuxJVMEnvironment {
+    
+    static {
+        System.setProperty("jna.boot.library.name", "jnidispatch");
+        System.setProperty("jna.nosys", "true");
+    }
 
-    private interface LibC extends Library {
+    public interface LibC extends Library {
         int setenv(String name, String value, int overwrite);
         int unsetenv(String name);
         String getenv(String name);
+        
+        public static LibC INSTANCE = Native.loadLibrary("c", LibC.class);
     }
 
-    private static LibC LIBC = Native.loadLibrary("c", LibC.class);
-
     public int unsetJVMEnvironmentVariable(String name) {
-        return LIBC.unsetenv(name);
+        return LibC.INSTANCE.unsetenv(name);
     }
 
     public int setJVMEnvironmentVariable(String name, String value, int overwrite) {
-        return LIBC.setenv(name, value, overwrite);
+        return LibC.INSTANCE.setenv(name, value, overwrite);
     }
 
     public String getJVMEnvironmentVariable(String name) {
-        return LIBC.getenv(name);
+        return LibC.INSTANCE.getenv(name);
     }
 
 }
